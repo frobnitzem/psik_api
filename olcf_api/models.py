@@ -12,3 +12,8 @@ class PublicHost(str, Enum):
     hpss = "hpss"
     frontier = "frontier"
 
+# DMR: why not make this a bool?
+class ErrorStatus(str, Enum):
+    OK = "OK"
+    ERROR = "ERROR"
+

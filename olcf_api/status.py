@@ -11,6 +11,7 @@ from .queries import get_json
 #from .models import PublicHost
 
 # https://fastapi.tiangolo.com/tutorial/bigger-applications/
+# TODO: output dates in local (EST/EDT) timezone rather than UTC
 
 # Data models specific to status routes:
 class StatusValue(str, Enum):
@@ -20,16 +21,16 @@ class StatusValue(str, Enum):
     other = "other"
 
 class SystemStatus(BaseModel):
-    name: str = Field(..., title="Name")
-    full_name: Optional[str] = Field(None, title="Full Name")
+    name: str = Field(..., title="System Name")
+    full_name: Optional[str] = Field(None, title="Full System Name")
     description: Optional[str] = Field(None, title="Description")
     system_type: Optional[str] = Field(None, title="System Type")
-    notes: Optional[List[str]] = Field(None, title="Notes")
+    notes: Optional[List[str]] = Field(None, title="Status Notes")
     status: StatusValue
     updated_at: Optional[datetime] = Field(None, title="Updated At")
 
 class Note(BaseModel):
-    name: str = Field(..., title="Name")
+    name: str = Field(..., title="System Name")
     notes: Optional[str] = Field(None, title="Notes")
     active: Optional[bool] = Field(False, title="Active")
     timestamp: Optional[datetime] = Field(None, title="Timestamp")
@@ -38,10 +39,10 @@ class Outage(BaseModel):
     name: str = Field(..., title="Name")
     start_at: Optional[datetime] = Field(None, title="Start At")
     end_at: Optional[datetime] = Field(None, title="End At")
-    description: Optional[str] = Field(None, title="Description")
-    notes: Optional[str] = Field(None, title="Notes")
-    status: Optional[str] = Field(None, title="Status")
-    swo: Optional[str] = Field(None, title="Swo")
+    description: Optional[str] = Field(None, title="Description") # Scheduled Maintenance, System Degraded, Unavailable
+    notes: Optional[str] = Field(None, title="Notes") # why/what's up
+    status: Optional[str] = Field(None, title="Status") # Completed/Planned/Cancelled/Active
+    swo: Optional[str] = Field(None, title="Will system be off? degr, true, or fals")
     update_at: Optional[datetime] = Field(None, title="Update At")
 
 
@@ -64,6 +65,11 @@ system_names = { "summit": "IBM AC922",
                  "andes": "Data Analysis System",
                  "frontier": "Cray EX 235a",
                }
+system_types = { "summit": "compute",
+                 "hpss": "filesystem",
+                 "andes": "compute",
+                 "frontier": "compute",
+               }
 
 async def update_status():
     global last_status_query
@@ -82,9 +88,9 @@ async def update_status():
         current_status[m] = SystemStatus(
                 name = m,
                 full_name = full_name,
-                description = None,
-                system_type = None,
-                notes = None,
+                description = f"System is {stat}",
+                system_type = system_types.get(m, None),
+                notes = [],
                 status = stat,
                 updated_at = last_status_query,
             )
@@ -132,10 +138,10 @@ async def update_outages():
         info = Outage(name        = str(out['system_name']),
                       start_at    = parse_time(out['downtime']),
                       end_at      = parse_time(out['uptime']),
-                      description = out.get('description', None),
-                      notes       = None,
-                      status      = None,
-                      swo         = None,
+                      description = "Scheduled Maintenance",
+                      notes       = out.get('description', None),
+                      status      = "Planned",
+                      swo         = "true",
                       update_at   = t,
                      )
         if info.name not in outages:
@@ -144,11 +150,13 @@ async def update_outages():
 
 @status.get("/")
 async def get_status() -> List[SystemStatus]:
+    "Read all system status information"
     await update_status()
     return [stat for m, stat in current_status.items()]
 
-@status.get("/status/{name}")
+@status.get("/{name}")
 async def read_status(name: str) -> SystemStatus:
+    "Read the status of the named system"
     await update_status()
     if name not in current_status:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -156,19 +164,27 @@ async def read_status(name: str) -> SystemStatus:
 
 @status.get("/notes")
 async def get_notes() -> List[List[Note]]:
+    "Read all status notes"
     return []
 
 @status.get("/notes/{name}")
 async def read_note(name: str) -> List[Note]:
+    "Read all notes pertaining to one system"
     raise HTTPException(status_code=404, detail="Item not found")
 
 @status.get("/outages")
 async def get_outages() -> List[List[Outage]]:
+    "Read all Outages."
     await update_outages()
-    return [ out for m, out in current_outages.items() ]
+    outs = []
+    for m, out in current_outages.items():
+        if len(out) > 0:
+            outs.append(out)
+    return outs
 
 @status.get("/outages/{name}")
 async def read_outage(name: str) -> List[Outage]:
+    "Read all Outages for the given system."
     await update_outages()
     if name not in current_outages:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -176,13 +192,19 @@ async def read_outage(name: str) -> List[Outage]:
 
 @status.get("/outages/planned")
 async def get_planned_outages() -> List[List[Outage]]:
+    "Read planned Outages."
     await update_outages()
     now = datetime.now(tz=timezone.utc)
-    return [ [o for o in out if o.start_at > now] \
-             for m, out in current_outages.items() ]
+    outs = []
+    for m, out in current_outages.items():
+        u = [o for o in out if o.start_at > now]
+        if len(u) > 0:
+            outs.append(u)
+    return outs
 
 @status.get("/outages/planned/{name}")
 async def read_planned_outage(name: str) -> List[Outage]:
+    "Read planned Outages for the given system."
     await update_outages()
     now = datetime.now(tz=timezone.utc)
     if name not in current_outages:
