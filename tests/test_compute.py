@@ -1,0 +1,54 @@
+from typing import List
+import time
+
+from fastapi.testclient import TestClient
+from psik import JobSpec
+
+from olcf_api.main import api
+from olcf_api.compute import JobOutput, QueueOutput
+from olcf_api.tasks import PostTaskResult, Task, Tasks
+
+# docs: python-httpx.org/advanced/
+client = TestClient(api)
+
+def test_get_jobs():
+    response = client.get("/compute/jobs/summit")
+    assert response.status_code == 200
+    resp = response.json()
+    QueueOutput.model_validate(resp)
+
+def test_post_job():
+    spec = JobSpec(script="echo 'OK'")
+    response = client.post("/compute/jobs/andes",
+                           json = spec.model_dump())
+    assert response.status_code == 200
+    resp = PostTaskResult.model_validate( response.json() )
+    tid = resp.task_id
+    
+    response = client.get("/tasks")
+    assert response.status_code == 200
+    resp = Tasks.model_validate(response.json()).tasks
+    assert isinstance(resp, list)
+    assert len(resp) == 1
+    assert resp[0].id == tid
+    print(tid, resp[0])
+
+    response = client.get(f"/tasks/{tid}")
+    assert response.status_code == 200
+    resp = Task.model_validate(response.json())
+    assert resp.id == tid
+    time.sleep(0.1)
+    if resp.status == "completed":
+        response = client.get(f"/compute/jobs/andes/{jobid}")
+        assert response.status_code == 200
+
+        response = client.delete(f"/compute/jobs/andes/{jobid}")
+        assert response.status_code == 200
+
+def test_read_job():
+    response = client.get("/compute/jobs/andes/_nojob")
+    assert response.status_code == 404
+
+def test_delete_job():
+    response = client.delete("/compute/jobs/andes/_nojob")
+    assert response.status_code == 404
