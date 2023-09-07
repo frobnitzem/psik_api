@@ -1,7 +1,11 @@
+import os
 import psik
+
+
+system = os.environ.get("LMOD_SYSTEM_NAME", "localhost")
 
 config = psik.config.load_config(None)
 managers = {
-          "andes": psik.JobManager(config.prefix, config.backend,
-                                   config.default_attr)
+          system: psik.JobManager(config.prefix, config.backend,
+                                  config.default_attr)
         }
