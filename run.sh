@@ -1,4 +1,6 @@
-poetry run uvicorn olcf_api.main:app --reload --log-level info
+# run on a socket if LMOD_SYSTEM_NAME is defined
+[ -z $LMOD_SYSTEM_NAME ] && poetry run uvicorn olcf_api.main:app --reload --log-level info
+[ -z $LMOD_SYSTEM_NAME ] || poetry run uvicorn olcf_api.main:app --reload --log-level info --uds $HOME/olcf_api.sock
 
 # Notes (https://www.uvicorn.org/deployment/)
 #
