@@ -10,7 +10,7 @@ fastapi = "^0.101.1"
 uvicorn = "^0.23.2"
 aiohttp = "^3.8.5"
 python-multipart = "^0.0.6"
-psik = { path = "../psik/", develop = false }
+psik = { git = "https://github.com/frobnitzem/psik.git", tag = "v0.5.0" }
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

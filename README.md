@@ -6,8 +6,8 @@ functionality available through other APIs and
 command-line utilities on OLCF systems.
 
 Note that this API differs from NERSC v1.2 because
-it uses a Psi\_k, an implementation of the Exaworks
-JobSpec, to specify jobs.
+it uses a Psi\_k, which implements a JobSpec
+based on the ExaWorks job api.
 
 To setup and run:
 
@@ -23,7 +23,7 @@ To setup and run:
      VIRTUAL_ENV=/full/path/to/venv
      PATH=$VIRTUAL_ENV/bin:$PATH
    
-     pip install git+https://code.ornl.gov/olcf_api@v0.2
+     pip install git+https://code.ornl.gov/olcf_api
 
      Create a config file in $HOME/.config/psik.json
      listing your job working directory and project id:
