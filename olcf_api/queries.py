@@ -18,7 +18,8 @@ async def get_http(url, json=False) -> Optional[Any]:
                 return await response.json()
             return await response.text()
 
-web_status = re.compile(r'<div class="system-status" data-system="([^"]*)">.*?<div class="current-status">\s*<div class="([^"]*)">', re.DOTALL)
+#web_status = re.compile(r'<div class="system-status" data-system="([^"]*)">.*?<div class="current-status">\s*<div class="([^"]*)">', re.DOTALL)
+web_status = re.compile(r'<div class="system-status" data-system="([^"]*)">.*?<div class="current-status">\s*<div class="([^"]*)">.*?</div>\s*(<p>)?\s*([^<]+)</div>', re.DOTALL)
 # TODO: also parse <i check></i> Operational <p>Up since Jun 20, 2023 </div>
 async def fetch_current_status():
     text = await get_http("https://www.olcf.ornl.gov/for-users/center-status")
@@ -28,11 +29,11 @@ async def fetch_current_status():
 
     stat = {}
     for m in web_status.finditer(text):
-        stat[m.group(1)] = m.group(2)
+        since = " ".join(m.group(4).split())
+        stat[m.group(1)] = (m.group(2), since)
     if len(stat) == 0:
         _logger.error("Invalid response from OLCF status web-API")
         return
     else:
         _logger.info("Parsed response from OLCF status web-API:", stat)
     return stat
-

@@ -12,14 +12,18 @@ from olcf_api.tasks import PostTaskResult, Task, Tasks
 client = TestClient(api)
 
 def test_get_jobs():
-    response = client.get("/compute/jobs/summit")
+    response = client.get("/compute/jobs/_nohost")
+    assert response.status_code == 404 \
+           or response.status_code == 422 
+
+    response = client.get("/compute/jobs/localhost")
     assert response.status_code == 200
     resp = response.json()
     QueueOutput.model_validate(resp)
 
 def test_post_job():
     spec = JobSpec(script="echo 'OK'")
-    response = client.post("/compute/jobs/andes",
+    response = client.post("/compute/jobs/localhost",
                            json = spec.model_dump())
     assert response.status_code == 200
     resp = PostTaskResult.model_validate( response.json() )
@@ -39,7 +43,7 @@ def test_post_job():
     assert resp.id == tid
     time.sleep(0.1)
     if resp.status == "completed":
-        response = client.get(f"/compute/jobs/andes/{jobid}")
+        response = client.get(f"/compute/jobs/localhost/{jobid}")
         assert response.status_code == 200
 
         response = client.delete(f"/compute/jobs/andes/{jobid}")

@@ -84,12 +84,16 @@ async def update_status():
         status = StatusValue.other
         notes = [ "no information" ]
         if m in stat:
-            if stat[m] == 'status-up':
+            val, since = stat[m]
+            if val == 'status-up':
                 status = StatusValue.active
-                notes = []
+                notes = [since]
+            elif val == 'status-down':
+                status = StatusValue.unavailable
+                notes = [since]
             else:
                 status = StatusValue.other
-                notes = [ stat[m] ]
+                notes = [ stat[m], since ]
             #unavailable
             #degraded
             #other
