@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from psik import JobSpec
 
 from olcf_api.main import api
-from olcf_api.compute import JobOutput, QueueOutput
+from olcf_api.compute import QueueOutput
 from olcf_api.tasks import PostTaskResult, Task, Tasks
 
 # docs: python-httpx.org/advanced/

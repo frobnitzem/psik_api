@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI
+from typing import Any
 from importlib.metadata import version
 __version__ = version(__package__)
 
@@ -14,7 +15,7 @@ description = """
 A programmatic way to access resources at OLCF.
 """
 
-tags_metadata = [
+tags_metadata : list[dict[str, Any]] = [
     {
         "name": "status",
         "description": "OLCF component system health.",

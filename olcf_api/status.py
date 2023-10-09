@@ -227,11 +227,16 @@ async def get_planned_outages(name: Optional[PublicHost] = None
     if name is None:
         outs : List[Outage] = []
         for m, out in current_outages.items():
-            outs.extend( [o for o in out if o.start_at > now] )
+            outs.extend( [o for o in out if is_after(o.start_at, now)] )
         return outs
     if name not in current_outages:
         raise HTTPException(status_code=404, detail="Item not found")
-    return [o for o in current_outages[name] if o.start_at > now]
+    return [o for o in current_outages[name] if is_after(o.start_at, now)]
+
+def is_after(a : Optional[datetime], b : datetime) -> bool:
+    if a is None:
+        return False
+    return a > b
 
 #@status.put(
 #    "/{item_id}",

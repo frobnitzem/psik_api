@@ -12,11 +12,6 @@ from .tasks import task_list, PostTaskResult
 from .models import ErrorStatus, PublicHost
 from .jobs import managers
 
-class JobOutput(BaseModel):
-    status: ErrorStatus
-    output: List[Dict[str, str]] = Field(..., title="Output")
-    error: Optional[str] = Field(None, title="Error")
-
 class QueueOutput(BaseModel):
     status: ErrorStatus
     output: List[Dict[str, str]] = Field(..., title="Output")
@@ -26,7 +21,7 @@ class QueueOutput(BaseModel):
 #class ValidationError(BaseModel):
 #    loc: List[str] = Field(..., title="Location")
 #    msg: str = Field(..., title="Message")
-#    type: str = Field(..., title="Error Type")
+#   xtype: str = Field(..., title="Error Type")
 
 #@app.post("/login/")
 #async def login(username: Annotated[str, Form()], password: Annotated[str, Form()]):
@@ -84,7 +79,7 @@ async def post_job(machine : PublicHost, job : psik.JobSpec) -> PostTaskResult:
 
 @compute.get("/jobs/{machine}/{jobid}")
 async def read_job(machine : PublicHost,
-                   jobid   : str) -> JobOutput:
+                   jobid   : str) -> QueueOutput:
     # Read job
     try:
         mgr = managers[machine.value]
