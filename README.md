@@ -15,8 +15,9 @@ To setup and run:
    Note that psik (installed automatically as a dependency) must
    be accessible to your job script so it can provide status updates.
    This is usually the case because the PATH var should
-   include olcf\_api's VIRTUAL\_ENV/bin.
+   include olcf\_api's `$VIRTUAL_ENV/bin`.
 
+```
      module load python/3
      python3 -m venv
      getrc.sh venv # https://github.com/frobnitzem/rcrc
@@ -38,24 +39,30 @@ To setup and run:
                 }
             }
         }
+```
 
 2. Set up a local to remote ssh tunnel and 
    start a worker process:
 
+```
     ssh andes -L 127.0.0.1:8000:/ccs/home/rogersdd/olcf_api.sock
     activate venv
     uvicorn olcf_api.main:app --log-level info \
              --uds $HOME/olcf_api.sock
+```
 
-    Note that using a UNIX socket in $HOME is secure since only
+    Note that using a UNIX socket in `$HOME` is secure since only
     your user can read/write from it.
 
 4. Browse / access the API at:
 
+```
    http://127.0.0.1:8000/api/v0.2
+```
 
 5. Send a test job:
 
+```
     curl -X POST \
       http://127.0.0.1:8000/api/v0.2/compute/jobs/frontier \
       -H 'accept: application/json' \
@@ -80,4 +87,4 @@ To setup and run:
     curl -X 'GET' \
       'http://127.0.0.1:8000/api/v0.2/compute/jobs/frontier/1693992878.203' \
       -H 'accept: application/json'
-
+```
