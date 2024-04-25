@@ -17,6 +17,9 @@ To setup and run:
    This is usually the case because the PATH var should
    include olcf\_api's `$VIRTUAL_ENV/bin`.
 
+   For complex installations, consider manually setting psik's
+   `PSIK_CONFIG` environment variable.
+
 ```
      module load python/3
      python3 -m venv

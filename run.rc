@@ -1,6 +1,13 @@
+#!/usr/bin/env rc
+# Execute this script with `poetry run ./run.rc`
+
 # run on a socket if LMOD_SYSTEM_NAME is defined
-[ -z $LMOD_SYSTEM_NAME ] && poetry run uvicorn olcf_api.main:app --reload --log-level info
-[ -z $LMOD_SYSTEM_NAME ] || poetry run uvicorn olcf_api.main:app --reload --log-level info --uds $HOME/olcf_api.sock
+opts = (--reload --log-level info)
+
+if( ! ~$#LMOD_SYSTEM_NAME 0 ) {
+    opts = ($opts --uds $HOME/olcf_api.sock)
+}
+uvicorn olcf_api.main:app $opts
 
 # Notes (https://www.uvicorn.org/deployment/)
 #
