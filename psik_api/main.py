@@ -12,20 +12,20 @@ version_tag = __version__.rsplit(".", 1)[0]
 api_version_prefix = "/api/v" + version_tag
 
 description = """
-A programmatic way to access resources at OLCF.
+A programmatic way to access resources at psik.
 """
 
 tags_metadata : list[dict[str, Any]] = [
     {
         "name": "status",
-        "description": "OLCF component system health.",
+        "description": "psik component system health.",
     },
     {
         "name": "compute",
-        "description": "Run commands and manage batch jobs on OLCF compute resources.",
+        "description": "Run commands and manage batch jobs on psik compute resources.",
         "externalDocs": {
-            "description": "OLCF System Documentation",
-            "url": "https://docs.olcf.ornl.gov/systems/index.html",
+            "description": "psik System Documentation",
+            "url": "https://github.com/frobnitzem/psik_api",
         },
     },
     {
@@ -35,18 +35,18 @@ tags_metadata : list[dict[str, Any]] = [
 ]
 
 api = FastAPI(
-        title="OLCF SuperFacility API",
+        title="psik API",
         openapi_url   = "/openapi.json",
         #root_path     = api_version_prefix,
         docs_url      = "/",
         description   = description,
         #summary      = "A fancy re-packaging of command-line tools.",
         version       = version_tag,
-        terms_of_service="https://docs.olcf.ornl.gov/accounts/olcf_policy_guide.html",
+        #terms_of_service="You're on your own here.",
         #contact={
         #    "name": "",
         #    "url": "",
-        #    "email": "help@olcf.ornl.gov",
+        #    "email": "help@psik.local",
         #},
         openapi_tags  = tags_metadata,
         responses     = {404: {"description": "Not found"}},

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "olcf_api"
+name = "psik_api"
 version = "0.2.2"
 description = ""
 authors = ["David M. Rogers <predictivestatmech@gmail.com>"]

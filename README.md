@@ -1,9 +1,9 @@
-OLCF API
+PSI\_K API
 ========
 
 This project presents a REST-HTTP API to
 functionality available through other APIs and
-command-line utilities on OLCF systems.
+command-line utilities on PSI\_K systems.
 
 Note that this API differs from NERSC v1.2 because
 it uses a Psi\_k, which implements a JobSpec
@@ -11,11 +11,11 @@ based on the ExaWorks job api.
 
 To setup and run:
 
-1. Install olcf\_api (from the site you intend to use):
+1. Install psik\_api (from the site you intend to use):
    Note that psik (installed automatically as a dependency) must
    be accessible to your job script so it can provide status updates.
    This is usually the case because the PATH var should
-   include olcf\_api's `$VIRTUAL_ENV/bin`.
+   include psik\_api's `$VIRTUAL_ENV/bin`.
 
    For complex installations, consider manually setting psik's
    `PSIK_CONFIG` environment variable.
@@ -27,7 +27,7 @@ To setup and run:
      VIRTUAL_ENV=/full/path/to/venv
      PATH=$VIRTUAL_ENV/bin:$PATH
    
-     pip install git+https://code.ornl.gov/olcf_api
+     pip install git+https://github.com/frobnitzem/psik_api.git
 
      Create a config file in $HOME/.config/psik.json
      listing your job working directory and project id:
@@ -48,10 +48,10 @@ To setup and run:
    start a worker process:
 
 ```
-    ssh andes -L 127.0.0.1:8000:/ccs/home/rogersdd/olcf_api.sock
+    ssh andes -L 127.0.0.1:8000:/ccs/home/rogersdd/psik_api.sock
     activate venv
-    uvicorn olcf_api.main:app --log-level info \
-             --uds $HOME/olcf_api.sock
+    uvicorn psik_api.main:app --log-level info \
+             --uds $HOME/psik_api.sock
 ```
 
     Note that using a UNIX socket in `$HOME` is secure since only

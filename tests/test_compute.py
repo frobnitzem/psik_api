@@ -4,9 +4,9 @@ import time
 from fastapi.testclient import TestClient
 from psik import JobSpec
 
-from olcf_api.main import api
-from olcf_api.compute import QueueOutput
-from olcf_api.tasks import PostTaskResult, Task, Tasks
+from psik_api.main import api
+from psik_api.compute import QueueOutput
+from psik_api.tasks import PostTaskResult, Task, Tasks
 
 # docs: python-httpx.org/advanced/
 client = TestClient(api)

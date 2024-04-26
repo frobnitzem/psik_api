@@ -2,8 +2,8 @@ from typing import List
 
 from fastapi.testclient import TestClient
 
-from olcf_api.main import api
-from olcf_api.status import SystemStatus, Outage
+from psik_api.main import api
+from psik_api.status import SystemStatus, Outage
 
 # docs: python-httpx.org/advanced/
 client = TestClient(api)

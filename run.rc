@@ -5,12 +5,12 @@
 opts = (--reload --log-level info)
 
 if( ! ~$#LMOD_SYSTEM_NAME 0 ) {
-    opts = ($opts --uds $HOME/olcf_api.sock)
+    opts = ($opts --uds $HOME/psik_api.sock)
 }
-uvicorn olcf_api.main:app $opts
+uvicorn psik_api.main:app $opts
 
 # Notes (https://www.uvicorn.org/deployment/)
 #
 # Secure options for single-user execution:
-#--uds $HOME/olcf_api.sock # process requests through a UNIX domain socket
+#--uds $HOME/psik_api.sock # process requests through a UNIX domain socket
 #--fd 0 # process requests through stdin/out
