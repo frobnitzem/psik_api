@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import psik
 
 from .models import ErrorStatus
-from .jobs   import managers
+from .config import managers
 
 class Task(BaseModel):
     id: int = Field(title="Task id")
@@ -88,8 +88,7 @@ class TaskList(dict[int,TaskInfo]):
                               status = ErrorStatus.OK)
 
 async def _submit_job(mgr : psik.JobManager, spec : psik.JobSpec):
-    """ Async coroutine to create and submit the
-        jobspec through Psi_k
+    """ Async coroutine to create and submit the jobspec through Psi_k.
     """
     job = await mgr.create(spec)
     await job.submit()

@@ -5,20 +5,14 @@ This project presents a REST-HTTP API to
 functionality available through other APIs and
 command-line utilities on PSI\_K systems.
 
-Note that this API differs from NERSC v1.2 because
-it uses a Psi\_k, which implements a JobSpec
-based on the ExaWorks job api.
+This API is inspired by the NERSC "superfacility" API
+v1.2 and the ExaWorks JobSpec.  Differences come from
+the need to make the superfacility more portable between
+backends and the JobSpec more API-friendly.
 
 To setup and run:
 
-1. Install psik\_api (from the site you intend to use):
-   Note that psik (installed automatically as a dependency) must
-   be accessible to your job script so it can provide status updates.
-   This is usually the case because the PATH var should
-   include psik\_api's `$VIRTUAL_ENV/bin`.
-
-   For complex installations, consider manually setting psik's
-   `PSIK_CONFIG` environment variable.
+1. Install the rc shell and psik\_api (from the site you intend to use):
 
 ```
      module load python/3
@@ -28,30 +22,49 @@ To setup and run:
      PATH=$VIRTUAL_ENV/bin:$PATH
    
      pip install git+https://github.com/frobnitzem/psik_api.git
-
-     Create a config file in $HOME/.config/psik.json
-     listing your job working directory and project id:
-        {
-        "prefix": "/lustre/orion/stf006/scratch/rogersdd/andes",
-        "backend": "slurm",
-        "default_attr": {
-            "project_name": "stf006",
-            "custom_attributes": {
-                    "slurm": {"--gpu-bind": "closest"},
-                    "jsrun": {"-b": "packed:rs"}
-                }
-            }
-        }
 ```
 
-2. Set up a local to remote ssh tunnel and 
-   start a worker process:
+2. Setup a psik\_api config file.  This file contains multiple
+   psik config files -- one for each system you wish to access.
+
+   Every machine in psik\_api corresponds to a particular
+   psik config.  Be careful with the `psik_path` and `rc_path`
+   options here, since these are the paths that must be
+   accessible during the execution of the job.
+
+   Note that the `PSIK_CONFIG` environment variable does not
+   influence the server running `psik_api`.
+
+   Create a config file at `$PSIK_API_CONFIG` (defaults to
+   `$HOME/.config/psik_api.json`) like,
+
+       { "default": {
+           "prefix": "/ccs/proj/stf006/rogersdd/frontier",
+           "psik_path": "/ccs/proj/stf006/rogersdd/frontier/bin/psik",
+           "rc_path": "/ccs/proj/stf006/rogersdd/frontier/bin/rc",
+           "backend": {
+             "type": "slurm",
+             "project_name": "stf006",
+             "attributes": {
+               "---gpu-bind": "closest"
+             }
+           }
+         }
+       }
+
+   here, each entry maps a queue name (e.g. "default") to
+   a `psik.Config` object.
+
+3. Start the server.  This can be done either directly
+   by ssh-tunneling to a login node, or indirectly
+   by starting a long-running containerized service.
+
+   The ssh-tunnel method is simplest,
 
 ```
-    ssh andes -L 127.0.0.1:8000:/ccs/home/rogersdd/psik_api.sock
-    activate venv
-    uvicorn psik_api.main:app --log-level info \
-             --uds $HOME/psik_api.sock
+    ssh frontier -L 127.0.0.1:8000:/ccs/home/rogersdd/psik_api.sock
+    activate /ccs/proj/stf006/frontier
+    uvicorn psik_api.main:app --log-level info --uds $HOME/psik_api.sock
 ```
 
     Note that using a UNIX socket in `$HOME` is secure since only
@@ -60,14 +73,14 @@ To setup and run:
 4. Browse / access the API at:
 
 ```
-   http://127.0.0.1:8000/api/v0.2
+   http://127.0.0.1:8000/
 ```
 
 5. Send a test job:
 
 ```
     curl -X POST \
-      http://127.0.0.1:8000/api/v0.2/compute/jobs/frontier \
+      http://127.0.0.1:8000/compute/jobs/default \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -83,11 +96,11 @@ To setup and run:
     }'
 
     curl -X 'GET' \
-      'http://127.0.0.1:8000/api/v0.2/tasks/' \
+      'http://127.0.0.1:8000/tasks/' \
       -H 'accept: application/json'
 
     # replace 1693992878.203 with your job's timestamp
     curl -X 'GET' \
-      'http://127.0.0.1:8000/api/v0.2/compute/jobs/frontier/1693992878.203' \
+      'http://127.0.0.1:8000/compute/jobs/default/1693992878.203' \
       -H 'accept: application/json'
 ```

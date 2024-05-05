@@ -9,8 +9,8 @@ from fastapi import APIRouter, HTTPException, Form, Query
 import psik
 
 from .tasks import task_list, PostTaskResult
-from .models import ErrorStatus, PublicHost
-from .jobs import managers
+from .models import ErrorStatus
+from .config import managers
 
 class QueueOutput(BaseModel):
     status: ErrorStatus
@@ -34,7 +34,7 @@ compute = APIRouter(responses={
 KeyVals = Annotated[str, Query(pattern=r"^[^=]+=[^=]+$")]
 
 @compute.get("/jobs/{machine}")
-async def get_jobs(machine : PublicHost,
+async def get_jobs(machine : str,
                    index : int = 0,
                    limit : Optional[int] = None,
                    kwargs : Annotated[List[KeyVals], Query()] = []) -> QueueOutput:
@@ -48,7 +48,7 @@ async def get_jobs(machine : PublicHost,
     """
 
     try:
-        mgr = managers[machine.value]
+        mgr = managers[machine]
     except :
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -64,7 +64,7 @@ async def get_jobs(machine : PublicHost,
     return QueueOutput(status=ErrorStatus.OK, output=out, error=None)
 
 @compute.post("/jobs/{machine}")
-async def post_job(machine : PublicHost, job : psik.JobSpec) -> PostTaskResult:
+async def post_job(machine : str, job : psik.JobSpec) -> PostTaskResult:
     """
     Submit a job to run on a compute resource.
 
@@ -75,14 +75,14 @@ async def post_job(machine : PublicHost, job : psik.JobSpec) -> PostTaskResult:
     the task body will contain the job id.
     """
 
-    return await task_list.submit_job(machine.value, job)
+    return await task_list.submit_job(machine, job)
 
 @compute.get("/jobs/{machine}/{jobid}")
-async def read_job(machine : PublicHost,
+async def read_job(machine : str,
                    jobid   : str) -> QueueOutput:
     # Read job
     try:
-        mgr = managers[machine.value]
+        mgr = managers[machine]
     except :
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -105,11 +105,11 @@ async def read_job(machine : PublicHost,
     return QueueOutput(status=ErrorStatus.OK, output=out, error=None)
 
 @compute.delete("/jobs/{machine}/{jobid}")
-async def delete_job(machine : PublicHost,
+async def delete_job(machine : str,
                      jobid   : str) -> PostTaskResult:
     # Cancel job
     try:
-        mgr = managers[machine.value]
+        mgr = managers[machine]
     except :
         raise HTTPException(status_code=404, detail="Item not found")
 

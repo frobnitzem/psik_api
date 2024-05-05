@@ -16,14 +16,14 @@ def test_get_jobs():
     assert response.status_code == 404 \
            or response.status_code == 422 
 
-    response = client.get("/compute/jobs/localhost")
+    response = client.get("/compute/jobs/default")
     assert response.status_code == 200
     resp = response.json()
     QueueOutput.model_validate(resp)
 
 def test_post_job():
     spec = JobSpec(script="echo 'OK'")
-    response = client.post("/compute/jobs/localhost",
+    response = client.post("/compute/jobs/default",
                            json = spec.model_dump())
     assert response.status_code == 200
     resp = PostTaskResult.model_validate( response.json() )
@@ -43,16 +43,16 @@ def test_post_job():
     assert resp.id == tid
     time.sleep(0.1)
     if resp.status == "completed":
-        response = client.get(f"/compute/jobs/localhost/{jobid}")
+        response = client.get(f"/compute/jobs/default/{jobid}")
         assert response.status_code == 200
 
-        response = client.delete(f"/compute/jobs/andes/{jobid}")
+        response = client.delete(f"/compute/jobs/default/{jobid}")
         assert response.status_code == 200
 
 def test_read_job():
-    response = client.get("/compute/jobs/andes/_nojob")
+    response = client.get("/compute/jobs/default/_nojob")
     assert response.status_code == 404
 
 def test_delete_job():
-    response = client.delete("/compute/jobs/andes/_nojob")
+    response = client.delete("/compute/jobs/default/_nojob")
     assert response.status_code == 404
