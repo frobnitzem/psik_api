@@ -1,6 +1,5 @@
 from typing import Optional, List, Dict
 from typing_extensions import Annotated
-import re
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -9,12 +8,12 @@ from fastapi import APIRouter, HTTPException, Form, Query
 import psik
 
 from .tasks import task_list, PostTaskResult
-from .models import ErrorStatus
+from .models import ErrorStatus, JobStepInfo, stamp_re
 from .config import managers
 
 class QueueOutput(BaseModel):
     status: ErrorStatus
-    output: List[Dict[str, str]] = Field(..., title="Output")
+    output: List[JobStepInfo] = Field(..., title="Output")
     error: Optional[str] = Field(None, title="Error")
 
 ## Potential response
@@ -55,12 +54,13 @@ async def get_jobs(machine : str,
     out = []
     async for job in mgr.ls():
         t, ndx, state, info = job.history[-1]
-        out.append({'stamp': job.stamp,
-                    'name': job.spec.name or '',
-                    'updated': str(t),
-                    'jobndx': str(ndx),
-                    'state': state.value,
-                    'info': str(info)})
+        out.append(JobStepInfo(
+                    jobid = job.stamp,
+                    name = job.spec.name or '',
+                    updated = t,
+                    jobndx = ndx,
+                    state = state,
+                    info = info))
     return QueueOutput(status=ErrorStatus.OK, output=out, error=None)
 
 @compute.post("/jobs/{machine}")
@@ -87,7 +87,7 @@ async def read_job(machine : str,
         raise HTTPException(status_code=404, detail="Item not found")
 
     # TODO: document this
-    if not re.match(r'[0-9]+\.[0-9]*', jobid):
+    if not stamp_re.match(jobid):
         raise HTTPException(status_code=404, detail="Item not found")
     try:
         job = await psik.Job(mgr.prefix / jobid)
@@ -96,12 +96,13 @@ async def read_job(machine : str,
 
     out = []
     for t, ndx, state, info in job.history:
-        out.append({'stamp': job.stamp,
-                    'name': job.spec.name or '',
-                    'updated': str(t),
-                    'jobndx': str(ndx),
-                    'state': state.value,
-                    'info': str(info)})
+        out.append(JobStepInfo(
+                    jobid = job.stamp,
+                    name = job.spec.name or '',
+                    updated = t,
+                    jobndx = ndx,
+                    state = state,
+                    info = info))
     return QueueOutput(status=ErrorStatus.OK, output=out, error=None)
 
 @compute.delete("/jobs/{machine}/{jobid}")
@@ -114,7 +115,7 @@ async def delete_job(machine : str,
         raise HTTPException(status_code=404, detail="Item not found")
 
     # TODO: document this
-    if not re.match(r'[0-9]+\.[0-9]*', jobid):
+    if not stamp_re.match(jobid):
         raise HTTPException(status_code=404, detail="Item not found")
     try:
         job = await psik.Job(mgr.prefix / jobid)

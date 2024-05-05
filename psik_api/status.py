@@ -7,7 +7,6 @@ _logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException
 
-from .queries import get_http, fetch_current_status
 from .config import managers
 
 # Data models specific to status routes:

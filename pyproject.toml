@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psik_api"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 authors = ["David M. Rogers <predictivestatmech@gmail.com>"]
 
@@ -8,9 +8,9 @@ authors = ["David M. Rogers <predictivestatmech@gmail.com>"]
 python = "^3.9"
 fastapi = "^0.101.1"
 uvicorn = "^0.23.2"
-aiohttp = "^3.8.5"
+aiohttp = ">=3.8.5"
 python-multipart = "^0.0.6"
-psik = { git = "https://github.com/frobnitzem/psik.git", tag = "v1.0.0" }
+psik = { git = "https://github.com/frobnitzem/psik.git", tag = "v1.1.0" }
 importlib-metadata = "^6.8.0"
 
 [tool.poetry.dev-dependencies]
