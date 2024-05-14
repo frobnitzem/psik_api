@@ -1,7 +1,8 @@
+from typing import Annotated
 import logging
 _logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, HTTPException, Header, Annotated
+from fastapi import APIRouter, HTTPException, Header
 
 import psik
 
@@ -31,6 +32,8 @@ async def do_callback(machine : str,
 
     job = await psik.Job(base)
     if job.spec.client_secret:
+        if x_hub_signature_256 is None:
+            raise HTTPException(status_code=403, detail="x-hub-signature-256 header is missing!")
         psik.web.verify_signature(
                    cb.model_dump_json(), # FIXME - get actual message body
                    job.spec.client_secret.get_secret_value(),

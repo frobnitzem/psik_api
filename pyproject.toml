@@ -5,7 +5,7 @@ description = ""
 authors = ["David M. Rogers <predictivestatmech@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<4.0"
 fastapi = "^0.101.1"
 uvicorn = "^0.23.2"
 aiohttp = ">=3.8.5"
@@ -14,7 +14,7 @@ psik = { git = "https://github.com/frobnitzem/psik.git", tag = "v1.2.0" }
 importlib-metadata = "^6.8.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = ">=7.0"
 httpx = "^0.24.1"
 pytest-cov = "^4.1.0"
 mypy = "^1.5.1"

@@ -12,8 +12,8 @@ def test_get_status():
     response = client.get("/status")
     assert response.status_code == 200
     resp = response.json()
-    assert isinstance(resp, list)
-    for r in resp:
+    assert isinstance(resp, dict)
+    for r in resp.values():
         SystemStatus.model_validate(r)
 
 def test_read_status():
@@ -22,7 +22,7 @@ def test_read_status():
     response = client.get("/status", params={"name": "default"})
     assert response.status_code == 200
     resp = response.json()
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json(), dict)
     assert len(resp) == 1
-    for r in resp:
-        SystemStatus.model_validate(r)
+    r = resp["default"]
+    SystemStatus.model_validate(r)
