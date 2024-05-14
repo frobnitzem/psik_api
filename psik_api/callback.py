@@ -1,11 +1,7 @@
-from enum import Enum
-from typing import Dict, List, Optional
-from datetime import date as date_, datetime, timezone, timedelta
 import logging
 _logger = logging.getLogger(__name__)
 
-from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Header, Annotated
 
 import psik
 
@@ -14,8 +10,12 @@ from .models import ErrorStatus, stamp_re
 
 callback = APIRouter()
 
+# TODO: run psik.web.verify_signature(body text, secret token, x-hub-signature-256 header value)
 @callback.post("/{machine}/{jobid}")
-async def do_callback(machine : str, jobid : str, cb : psik.Callback) -> ErrorStatus:
+async def do_callback(machine : str,
+                      jobid : str,
+                      cb : psik.Callback,
+                      x_hub_signature_256 : Annotated[str | None, Header()] = None) -> ErrorStatus:
     "Notify psik_api that a job has reached a given state."
 
     if not stamp_re.match(jobid):
@@ -29,8 +29,14 @@ async def do_callback(machine : str, jobid : str, cb : psik.Callback) -> ErrorSt
     if not base.is_dir():
         raise HTTPException(status_code=404, detail="Item not found")
 
-    job = psik.Job(base)
+    job = await psik.Job(base)
+    if job.spec.client_secret:
+        psik.web.verify_signature(
+                   cb.model_dump_json(), # FIXME - get actual message body
+                   job.spec.client_secret.get_secret_value(),
+                   x_hub_signature_256)
+
     ok = await job.reached(cb.jobndx, cb.state, cb.info)
-    if ok:
-        return ErrorStatus.OK
-    return ErrorStatus.ERROR
+    if not ok:
+        return ErrorStatus.ERROR
+    return ErrorStatus.OK

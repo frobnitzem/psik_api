@@ -7,6 +7,7 @@ __version__ = version(__package__)
 from .status import status
 from .compute import compute
 from .tasks import tasks
+from .callback import callback
 
 # TODO: @cache a config-file here.
 
@@ -26,6 +27,18 @@ tags_metadata : list[dict[str, Any]] = [
     {
         "name": "tasks",
         "description": "Get information about tasks you are running within the API.",
+    },
+    {
+        "name": "callback",
+        "description": "Callbacks used by tasks to update their status.",
+    },
+    {
+        "name": "outputs",
+        "description": "Access compute job outputs.",
+    },
+    {
+        "name": "inputs",
+        "description": "Setup compute job inputs.",
     },
 ]
 
@@ -61,6 +74,11 @@ api.include_router(
     tasks,
     prefix="/tasks",
     tags = ["tasks"],
+)
+api.include_router(
+    callback,
+    prefix="/callback",
+    tags = ["callback"],
 )
 
 app = api
