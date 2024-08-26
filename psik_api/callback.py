@@ -11,13 +11,15 @@ from .models import ErrorStatus, stamp_re
 
 callback = APIRouter()
 
-# TODO: run psik.web.verify_signature(body text, secret token, x-hub-signature-256 header value)
 @callback.post("/{machine}/{jobid}")
 async def do_callback(machine : str,
                       jobid : str,
                       cb : psik.Callback,
                       x_hub_signature_256 : Annotated[str | None, Header()] = None) -> ErrorStatus:
-    "Notify psik_api that a job has reached a given state."
+    """ Notify psik_api that a job has reached a given state.
+    This will call `psik.Job.reached`, forwarding
+    the callback along the chain.
+    """
 
     if not stamp_re.match(jobid):
         raise HTTPException(status_code=404, detail="Item not found")

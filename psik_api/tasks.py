@@ -103,11 +103,11 @@ task_list = TaskList()
 tasks = APIRouter()
 
 @tasks.get("/")
-def get_tasks() -> Tasks:
+async def get_tasks() -> Tasks:
     return Tasks(tasks = [v for k,v in task_list.items()])
 
 @tasks.get("/{id}")
-def read_task(id : int) -> Task:
+async def read_task(id : int) -> Task:
     if id not in task_list:
         raise HTTPException(status_code=404, detail="Item not found")
     return task_list[id]

@@ -8,6 +8,7 @@ from .status import status
 from .compute import compute
 from .tasks import tasks
 from .callback import callback
+from .outputs import outputs
 
 # TODO: @cache a config-file here.
 
@@ -74,6 +75,11 @@ api.include_router(
     tasks,
     prefix="/tasks",
     tags = ["tasks"],
+)
+api.include_router(
+    outputs,
+    prefix="/outputs",
+    tags = ["outputs"],
 )
 api.include_router(
     callback,
