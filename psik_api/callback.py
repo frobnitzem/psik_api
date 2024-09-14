@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -12,10 +12,12 @@ from .models import ErrorStatus, stamp_re
 callback = APIRouter()
 
 @callback.post("/{machine}/{jobid}")
-async def do_callback(machine : str,
-                      jobid : str,
-                      cb : psik.Callback,
-                      x_hub_signature_256 : Annotated[str | None, Header()] = None) -> ErrorStatus:
+async def do_callback(machine: str,
+                      jobid: str,
+                      cb: psik.Callback,
+                      x_hub_signature_256: Annotated[Optional[str], Header()]
+                                            = None
+                     ) -> ErrorStatus:
     """ Notify psik_api that a job has reached a given state.
     This will call `psik.Job.reached`, forwarding
     the callback along the chain.
