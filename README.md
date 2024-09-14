@@ -1,5 +1,8 @@
+[![CI](https://github.com/frobnitzem/psik_api/actions/workflows/python-package.yml/badge.svg)](https://github.com/frobnitzem/psik_api/actions)
+<!--[![Coverage](https://codecov.io/github/frobnitzem/psik_api/branch/main/graph/badge.svg)](https://app.codecov.io/gh/frobnitzem/psik_api)-->
+
 PSI\_K API
-========
+==========
 
 This project presents a REST-HTTP API to
 functionality available through other APIs and
@@ -24,19 +27,28 @@ To setup and run:
      pip install git+https://github.com/frobnitzem/psik_api.git
 ```
 
-2. Setup a psik\_api config file.  This file contains multiple
-   psik config files -- one for each system you wish to access.
+2. Setup a psik\_api config file.  This file is a key-value store
+   mapping machine names to psik config files
+   -- one for each scheduler configuration.
 
-   Every machine in psik\_api corresponds to a particular
-   psik config.  Be careful with the `psik_path` and `rc_path`
-   options here, since these are the paths that must be
-   accessible during the execution of the job.
+   Be careful with the `psik_path` and `rc_path`
+   options here. These paths must be
+   accessible during the execution of the job, and
+   on the host running psik\_api.
 
    Note that the `PSIK_CONFIG` environment variable does not
    influence the server running `psik_api`.
 
    Create a config file at `$PSIK_API_CONFIG` (defaults to
-   `$HOME/.config/psik_api.json`) like,
+   `$VIRTUAL_ENV/etc/psik_api.json`) like,
+
+       { "default": {
+             "prefix": "/tmp/psik_jobs",
+             "backend": { "type": "local"}
+         }
+       }
+
+   or
 
        { "default": {
            "prefix": "/ccs/proj/stf006/rogersdd/frontier",
@@ -52,8 +64,6 @@ To setup and run:
          }
        }
 
-   here, each entry maps a queue name (e.g. "default") to
-   a `psik.Config` object.
 
 3. Start the server.  This can be done either directly
    by ssh-tunneling to a login node, or indirectly
@@ -67,8 +77,14 @@ To setup and run:
     uvicorn psik_api.main:app --log-level info --uds $HOME/psik_api.sock
 ```
 
-    Note that using a UNIX socket in `$HOME` is secure since only
-    your user can read/write from it.
+    Note that using a UNIX socket in `$HOME` is secure as long as
+    only your user can read/write from it.
+
+    For a more secure environment, use the `certified` package with:
+
+        ssh frontier -L 8000:localhost:4433
+        activate /ccs/proj/stf006/frontier
+        certifiied serve psik_api.main:app https://127.0.0.1:4433
 
 4. Browse / access the API at:
 
@@ -91,8 +107,7 @@ To setup and run:
         "cpu_cores_per_process": 7,
         "duration": 2,
         "gpu_cores_per_process": 1
-      },
-      "pre_submit": "pwd; module load rocm/5.5.1"
+      }
     }'
 
     curl -X 'GET' \
