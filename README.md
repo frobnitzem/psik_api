@@ -1,5 +1,5 @@
 [![CI](https://github.com/frobnitzem/psik_api/actions/workflows/python-package.yml/badge.svg)](https://github.com/frobnitzem/psik_api/actions)
-<!--[![Coverage](https://codecov.io/github/frobnitzem/psik_api/branch/main/graph/badge.svg)](https://app.codecov.io/gh/frobnitzem/psik_api)-->
+[![Coverage](https://codecov.io/github/frobnitzem/psik_api/branch/main/graph/badge.svg)](https://app.codecov.io/gh/frobnitzem/psik_api)
 
 PSI\_K API
 ==========
@@ -51,12 +51,12 @@ To setup and run:
    or
 
        { "default": {
-           "prefix": "/ccs/proj/stf006/rogersdd/frontier",
-           "psik_path": "/ccs/proj/stf006/rogersdd/frontier/bin/psik",
-           "rc_path": "/ccs/proj/stf006/rogersdd/frontier/bin/rc",
+           "prefix": "/ccs/proj/prj123/uname/frontier",
+           "psik_path": "/ccs/proj/prj123/uname/frontier/bin/psik",
+           "rc_path": "/ccs/proj/prj123/uname/frontier/bin/rc",
            "backend": {
              "type": "slurm",
-             "project_name": "stf006",
+             "project_name": "prj123",
              "attributes": {
                "---gpu-bind": "closest"
              }
@@ -72,8 +72,8 @@ To setup and run:
    The ssh-tunnel method is simplest,
 
 ```
-    ssh frontier -L 127.0.0.1:8000:/ccs/home/rogersdd/psik_api.sock
-    activate /ccs/proj/stf006/frontier
+    ssh frontier -L 127.0.0.1:8000:/ccs/home/uname/psik_api.sock
+    activate /ccs/proj/prj123/frontier
     uvicorn psik_api.main:app --log-level info --uds $HOME/psik_api.sock
 ```
 
@@ -83,8 +83,8 @@ To setup and run:
     For a more secure environment, use the `certified` package with:
 
         ssh frontier -L 8000:localhost:4433
-        activate /ccs/proj/stf006/frontier
-        certifiied serve psik_api.main:app https://127.0.0.1:4433
+        activate /ccs/proj/prj123/frontier
+        certified serve psik_api.main:app https://127.0.0.1:4433
 
 4. Browse / access the API at:
 
