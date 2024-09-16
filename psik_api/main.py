@@ -88,5 +88,11 @@ api.include_router(
 )
 
 app = api
+try:
+    from certified.formatter import log_request
+    app.middleware("http")(log_request)
+except ImportError:
+    pass
+
 #app = FastAPI()
 #app.mount("/api", api)
