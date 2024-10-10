@@ -96,7 +96,7 @@ To setup and run:
 
 ```
     curl -X POST \
-      http://127.0.0.1:8000/compute/jobs/default \
+      http://127.0.0.1:8000/jobs/default \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -116,6 +116,6 @@ To setup and run:
 
     # replace 1693992878.203 with your job's timestamp
     curl -X 'GET' \
-      'http://127.0.0.1:8000/compute/jobs/default/1693992878.203' \
+      'http://127.0.0.1:8000/jobs/default/1693992878.203' \
       -H 'accept: application/json'
 ```
