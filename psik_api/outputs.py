@@ -8,29 +8,17 @@ from fastapi.responses import FileResponse
 
 import psik
 
-from .config import managers
-from .models import ErrorStatus, stamp_re
+from .config import get_manager
+from .models import ErrorStatus
+from .jobs import get_job
 
 outputs = APIRouter()
-
-def get_job(machine : str, jobid : str) -> Path:
-    if not stamp_re.match(jobid):
-        raise HTTPException(status_code=404, detail="Item not found")
-    try:
-        mgr = managers[machine]
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    base = mgr.prefix / jobid
-    if not base.is_dir():
-        raise HTTPException(status_code=404, detail="Item not found")
-    return Path(base)
 
 @outputs.get("/{machine}/{jobid}/logs")
 async def list_outputs(machine : str, jobid : str) -> Dict[str,str]:
     """ Retreive all job logs.
     """
-    logs = get_job(machine, jobid) / "log"
+    logs = (await get_job(machine, jobid)) / "log"
     if not logs.is_dir():
         raise HTTPException(status_code=404, detail="log dir missing")
     ans : Dict[str,str] = {}
@@ -42,7 +30,7 @@ async def list_outputs(machine : str, jobid : str) -> Dict[str,str]:
 async def download_scripts(machine : str, jobid : str) -> Dict[str,str]:
     """ Retreive all job scripts.
     """
-    scripts = get_job(machine, jobid) / "scripts"
+    scripts = (await get_job(machine, jobid)) / "scripts"
     if not scripts.is_dir():
         raise HTTPException(status_code=404, detail="scripts dir missing")
     ans : Dict[str, str] = {}
@@ -66,7 +54,7 @@ def stat_dir(path : Path) -> Dict[str, Dict[str,int]]:
 async def list_output(machine : str, jobid : str) -> Dict[str,Dict[str,int]]:
     """ List all output files.
     """
-    job = await psik.Job(get_job(machine, jobid))
+    job = await psik.Job(await get_job(machine, jobid))
     work = Path(job.spec.directory)
     if not work.is_dir():
         raise HTTPException(status_code=404, detail="work dir missing")
@@ -74,7 +62,7 @@ async def list_output(machine : str, jobid : str) -> Dict[str,Dict[str,int]]:
 
 @outputs.get("/{machine}/{jobid}/work/{fname}")
 async def download_output(machine : str, jobid : str, fname : Path):
-    job = await psik.Job(get_job(machine, jobid))
+    job = await psik.Job(await get_job(machine, jobid))
     work = Path(job.spec.directory)
     if not work.is_dir():
         raise HTTPException(status_code=404, detail="work dir missing")

@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Header
 
 import psik
 
-from .config import managers
+from .config import get_manager
 from .models import ErrorStatus, stamp_re
 
 callback = APIRouter()
@@ -26,7 +26,7 @@ async def do_callback(machine: str,
     if not stamp_re.match(jobid):
         raise HTTPException(status_code=404, detail="Item not found")
     try:
-        mgr = managers[machine]
+        mgr = get_manager(machine)
     except KeyError:
         raise HTTPException(status_code=404, detail="Item not found")
 
