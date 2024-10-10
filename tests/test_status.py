@@ -10,7 +10,7 @@ from .test_config import setup_psik
 # docs: python-httpx.org/advanced/
 client = TestClient(api)
 
-def test_get_status():
+def test_get_status(setup_psik):
     response = client.get("/status")
     assert response.status_code == 200
     resp = response.json()

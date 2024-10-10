@@ -5,8 +5,7 @@ __version__ = version(__package__)
 
 #from .dependencies import get_token_header
 from .status import status
-from .compute import compute
-from .tasks import tasks
+from .jobs import jobs
 from .callback import callback
 from .outputs import outputs
 
@@ -22,24 +21,16 @@ tags_metadata : list[dict[str, Any]] = [
         "description": "psik backend status info.",
     },
     {
-        "name": "compute",
-        "description": "Run commands and manage batch jobs on configured compute resources.",
-    },
-    {
-        "name": "tasks",
-        "description": "Get information about tasks you are running within the API.",
-    },
-    {
-        "name": "callback",
-        "description": "Callbacks used by tasks to update their status.",
+        "name": "jobs",
+        "description": "Manage jobs on configured compute backends.",
     },
     {
         "name": "outputs",
         "description": "Access compute job outputs.",
     },
     {
-        "name": "inputs",
-        "description": "Setup compute job inputs.",
+        "name": "callback",
+        "description": "Callbacks used by downstream jobservers to update their status.",
     },
 ]
 
@@ -67,14 +58,9 @@ api.include_router(
     tags = ["status"],
 )
 api.include_router(
-    compute,
-    prefix="/compute",
-    tags = ["compute"],
-)
-api.include_router(
-    tasks,
-    prefix="/tasks",
-    tags = ["tasks"],
+    jobs,
+    prefix="/jobs",
+    tags = ["jobs"],
 )
 api.include_router(
     outputs,
@@ -89,7 +75,7 @@ api.include_router(
 
 app = api
 try:
-    from certified.formatter import log_request
+    from certified.formatter import log_request # type: ignore[import-not-found]
     app.middleware("http")(log_request)
 except ImportError:
     pass

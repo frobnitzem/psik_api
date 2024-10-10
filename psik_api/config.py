@@ -1,6 +1,7 @@
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, List
 import os
 import json
+from functools import cache
 
 from pathlib import Path
 
@@ -11,8 +12,9 @@ def to_mgr(info):
     cfg.prefix.mkdir(exist_ok=True, parents=True)
     return psik.JobManager(cfg)
 
-Pstr = Union[str, os.PathLike[str]]
+Pstr = Union[str, Path]
 
+@cache
 def get_managers(config_name : Optional[Pstr] = None
                 ) -> Dict[str, psik.JobManager]:
     """Lookup and return the dict of job managers found in
@@ -55,18 +57,12 @@ def get_managers(config_name : Optional[Pstr] = None
 
     return dict( (k,to_mgr(v)) for k,v in ans.items() )
 
-class Managers(dict):
-    # Simple class to cache the result of get_managers
-    def __init__(self):
-        self._is_init = False
-        self._old_get = super().__getitem__
-    def setup(self, config_name : Optional[Pstr] = None):
-        for k, v in get_managers(config_name).items():
-            self[k] = v
-        self._is_init = True
-    def __getitem__(self, mgr):
-        if not self._is_init:
-            self.setup()
-        return self._old_get(mgr)
+@cache
+def get_manager(mgr: str, config_name : Optional[Pstr] = None):
+    managers = get_managers(config_name)
+    return managers[mgr]
 
-managers = Managers()
+@cache
+def list_managers(config_name : Optional[Pstr] = None) -> List[str]:
+    managers = get_managers(config_name)
+    return list(managers.keys())
