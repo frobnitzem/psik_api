@@ -4,11 +4,18 @@ import logging
 _logger = logging.getLogger(__name__)
 
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException, Form, Query, File
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Form,
+    Query,
+    File,
+    BackgroundTasks,
+)
 import psik
 from pathlib import Path
 
-from .tasks import submit_job, cancel_job
+from .tasks import submit_job
 from .models import JobStepInfo, stamp_re
 from .config import get_manager
 
@@ -73,7 +80,9 @@ async def get_jobs(machine: str,
     return out
 
 @jobs.post("/{machine}")
-async def post_job(machine: str, job: psik.JobSpec) -> str:
+async def post_job(machine: str,
+                   job: psik.JobSpec,
+                   bg_tasks: BackgroundTasks) -> str:
     """
     Submit a job to run on a compute resource.
 
@@ -82,7 +91,7 @@ async def post_job(machine: str, job: psik.JobSpec) -> str:
     If successful this api will return the jobid created.
     """
     mgr = get_mgr(machine)
-    return await submit_job(mgr, job)
+    return await submit_job(mgr, job, bg_tasks)
 
 # TODO: allow population of a job directory with
 # files (https://fastapi.tiangolo.com/reference/uploadfile/)
@@ -120,11 +129,13 @@ async def read_job(machine : str,
 
 @jobs.delete("/{machine}/{jobid}")
 async def delete_job(machine : str,
-                     jobid   : str) -> None:
+                     jobid   : str,
+                     bg_tasks: BackgroundTasks) -> None:
     # Cancel job
     pre = await get_job(machine, jobid)
     try:
         job = await psik.Job(pre)
     except Exception:
         raise HTTPException(status_code=500, detail="Error reading job")
-    return await cancel_job(job)
+    bg_tasks.add_task(job.cancel)
+    return
