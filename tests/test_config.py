@@ -28,3 +28,5 @@ def test_config(setup_psik):
     assert tuple(list_managers(setup_psik)) == ("default",)
     #with pytest.raises(json.decoder.JSONDecodeError):
     #    pass
+    mgr = get_manager(None, setup_psik)
+    assert isinstance(mgr, psik.JobManager)

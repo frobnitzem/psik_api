@@ -6,9 +6,11 @@ from fastapi import HTTPException, Header
 
 import psik
 
-from .config import get_manager
-from .models import ErrorStatus, stamp_re
+from ..config import get_manager
+from ..models import ErrorStatus, stamp_re
 from .jobs import jobs, get_job
+
+added_callback = True
 
 @jobs.post("/{jobid}/state")
 async def do_callback(jobid: str,

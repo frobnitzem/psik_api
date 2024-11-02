@@ -19,9 +19,6 @@ from ..internal.tasks import submit_job
 from ..models import JobStepInfo, stamp_re
 from ..config import get_manager
 
-from .callback import callback
-from .outputs import outputs
-
 ## Potential response
 #class ValidationError(BaseModel):
 #    loc: List[str] = Field(..., title="Location")
@@ -57,17 +54,6 @@ async def get_job(jobid: str, backend: Optional[str] = None) -> Path:
     if not await base.is_dir():
         raise HTTPException(status_code=404, detail="Job not found")
     return Path(base)
-
-#jobs.include_router(
-#    outputs,
-#    prefix="/outputs",
-#    tags = ["outputs"],
-#)
-#jobs.include_router(
-#    callback,
-#    prefix="/callback",
-#    tags = ["callback"],
-#)
 
 @jobs.get("")
 @jobs.get("/")

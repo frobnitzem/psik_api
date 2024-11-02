@@ -1,3 +1,5 @@
+from typing import Optional, List
+from typing_extensions import Annotated
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -11,6 +13,8 @@ import psik
 from ..models import ErrorStatus, stamp_re
 from ..internal.paths import clean_rel_path
 from .jobs import jobs, get_mgr, get_job
+
+added_inputs = True
 
 @jobs.post("/new")
 async def new_input(jobspec: psik.JobSpec,

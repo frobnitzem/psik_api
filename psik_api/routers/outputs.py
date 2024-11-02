@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 from pathlib import Path
 import logging
 _logger = logging.getLogger(__name__)
@@ -13,6 +13,8 @@ from ..models import ErrorStatus
 from ..internal.paths import clean_rel_path
 
 from .jobs import jobs, get_job
+
+added_outputs = True
 
 @jobs.get("/{jobid}/logs")
 @jobs.get("/{jobid}/logs/")

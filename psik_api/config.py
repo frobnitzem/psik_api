@@ -65,7 +65,7 @@ def get_manager(mgr: Optional[str] = None,
     """
     managers = get_managers(config_name)
     if mgr is None and len(managers) > 0:
-        return managers[ managers.keys()[0] ]
+        mgr = list(managers.keys())[0]
     return managers[mgr]
 
 @cache
