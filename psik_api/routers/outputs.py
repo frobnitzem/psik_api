@@ -1,24 +1,27 @@
 from typing import Dict
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import logging
 _logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, HTTPException
+from fastapi import HTTPException
 from fastapi.responses import FileResponse
 
 import psik
 
-from .config import get_manager
-from .models import ErrorStatus
-from .jobs import get_job
+from ..config import get_manager
+from ..models import ErrorStatus
+from ..internal.paths import clean_rel_path
 
-outputs = APIRouter()
+from .jobs import jobs, get_job
 
-@outputs.get("/{machine}/{jobid}/logs")
-async def list_outputs(machine : str, jobid : str) -> Dict[str,str]:
+@jobs.get("/{jobid}/logs")
+@jobs.get("/{jobid}/logs/")
+async def list_outputs(jobid: str,
+                       backend: Optional[str] = None,
+                      ) -> Dict[str,str]:
     """ Retreive all job logs.
     """
-    logs = (await get_job(machine, jobid)) / "log"
+    logs = (await get_job(jobid, backend)) / "log"
     if not logs.is_dir():
         raise HTTPException(status_code=404, detail="log dir missing")
     ans : Dict[str,str] = {}
@@ -26,11 +29,13 @@ async def list_outputs(machine : str, jobid : str) -> Dict[str,str]:
         ans[p.name] = p.read_text()
     return ans
 
-@outputs.get("/{machine}/{jobid}/scripts")
-async def download_scripts(machine : str, jobid : str) -> Dict[str,str]:
+@jobs.get("/{jobid}/scripts")
+@jobs.get("/{jobid}/scripts/")
+async def download_scripts(jobid: str, backend: Optional[str] = None,
+                          ) -> Dict[str,str]:
     """ Retreive all job scripts.
     """
-    scripts = (await get_job(machine, jobid)) / "scripts"
+    scripts = (await get_job(jobid, backend)) / "scripts"
     if not scripts.is_dir():
         raise HTTPException(status_code=404, detail="scripts dir missing")
     ans : Dict[str, str] = {}
@@ -38,7 +43,7 @@ async def download_scripts(machine : str, jobid : str) -> Dict[str,str]:
         ans[p.name] = p.read_text()
     return ans
 
-def stat_dir(path : Path) -> Dict[str, Dict[str,int]]:
+def stat_dir(path: Path) -> Dict[str, Dict[str,int]]:
     # Caution! the path is not checked to ensure
     # it is safe to serve.
     ans = {}
@@ -50,30 +55,28 @@ def stat_dir(path : Path) -> Dict[str, Dict[str,int]]:
                       }
     return ans
 
-@outputs.get("/{machine}/{jobid}/work")
-async def list_output(machine : str, jobid : str) -> Dict[str,Dict[str,int]]:
+@jobs.get("/{jobid}/files")
+@jobs.get("/{jobid}/files/")
+async def list_output(jobid: str,
+                      backend: Optional[str] = None,
+                     ) -> Dict[str,Dict[str,int]]:
     """ List all output files.
     """
-    job = await psik.Job(await get_job(machine, jobid))
+    job = await psik.Job(await get_job(jobid, backend))
     work = Path(job.spec.directory)
     if not work.is_dir():
         raise HTTPException(status_code=404, detail="work dir missing")
     return stat_dir(work)
 
-@outputs.get("/{machine}/{jobid}/work/{fname}")
-async def download_output(machine : str, jobid : str, fname : Path):
-    job = await psik.Job(await get_job(machine, jobid))
-    work = Path(job.spec.directory)
-    if not work.is_dir():
-        raise HTTPException(status_code=404, detail="work dir missing")
+@jobs.get("/{jobid}/files/{fname}")
+async def download_output(jobid: str, fname: Path,
+                          backend: Optional[str] = None):
+    job = await psik.Job(await get_job(jobid, backend))
 
-    try:
-        path = work / Path( PurePosixPath(work/fname).relative_to(work) )
-    except ValueError:
-        raise HTTPException(status_code=403, detail="invalid path")
+    path = clean_rel_path(job, fname)
+
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"file {fname} not found")
-
     if path.is_dir():
         return stat_dir(path)
     return FileResponse(path,

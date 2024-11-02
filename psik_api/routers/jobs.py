@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 from typing_extensions import Annotated
+from pathlib import Path
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -13,11 +14,13 @@ from fastapi import (
     BackgroundTasks,
 )
 import psik
-from pathlib import Path
 
-from .tasks import submit_job
-from .models import JobStepInfo, stamp_re
-from .config import get_manager
+from ..internal.tasks import submit_job
+from ..models import JobStepInfo, stamp_re
+from ..config import get_manager
+
+from .callback import callback
+from .outputs import outputs
 
 ## Potential response
 #class ValidationError(BaseModel):
@@ -35,69 +38,100 @@ jobs = APIRouter(responses={
 
 KeyVals = Annotated[str, Query(pattern=r"^[^=]+=[^=]+$")]
 
-def get_mgr(machine: str) -> psik.JobManager:
+def get_mgr(backend: Optional[str] = None) -> psik.JobManager:
     try:
-        mgr = get_manager(machine)
+        mgr = get_manager(backend)
     except KeyError:
-        raise HTTPException(status_code=404, detail="Backend machine not found")
+        raise HTTPException(status_code=404, detail="Backend not found")
     return mgr
 
-async def get_job(machine: str, jobid: str) -> Path:
+async def get_job(jobid: str, backend: Optional[str] = None) -> Path:
     if not stamp_re.match(jobid):
         raise HTTPException(status_code=400, detail="Invalid jobid")
-    mgr = get_mgr(machine)
+    try:
+        mgr = get_manager(backend)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Invalid backend")
+
     base = mgr.prefix / jobid
     if not await base.is_dir():
         raise HTTPException(status_code=404, detail="Job not found")
     return Path(base)
 
-@jobs.get("/{machine}")
-async def get_jobs(machine: str,
-                   index: int = 0,
+#jobs.include_router(
+#    outputs,
+#    prefix="/outputs",
+#    tags = ["outputs"],
+#)
+#jobs.include_router(
+#    callback,
+#    prefix="/callback",
+#    tags = ["callback"],
+#)
+
+@jobs.get("")
+@jobs.get("/")
+async def get_jobs(index: int = 0,
                    limit: Optional[int] = None,
-                   kwargs: Annotated[List[KeyVals], Query()] = []) -> List[JobStepInfo]:
+                   backend: Optional[str] = None,
+                   state: Optional[psik.JobState] = None,
+                  ) -> List[JobStepInfo]:
     """
     Get information about jobs running on compute resources.
 
-      - machine: the compute resource name
-      - index: the index of the first job info to retrieve
-      - limit: (optional) how many job infos to retrieve
-      - kwargs: (optional) a list of key/value pairs (in the form of name=value) to filter job results by
+      - index: the index of the last job info to retrieve
+               Jobs are sorted by time, so index 0 is the most recent job.
+      - limit: (optional) how many JobStepInfo-s to retrieve
+      - backend: (optional) the compute resource name
+      - state: (optional) filter by job state
     """
 
-    mgr = get_mgr(machine)
+    # TODO: use a real db query here.
+    mgr = get_mgr(backend)
 
     out = []
     async for job in mgr.ls():
-        t, ndx, state, info = job.history[-1]
+        t, ndx, jstate, info = job.history[-1]
+        if state is not None and jstate != state:
+            continue
         out.append(JobStepInfo(
                     jobid = job.stamp,
                     name = job.spec.name or '',
                     updated = t,
                     jobndx = ndx,
-                    state = state,
+                    state = jstate,
                     info = info))
+    out.sort(key = lambda x: -float(x.jobid))
+    if index is not None and index > 0:
+        if index >= len(out):
+            out = []
+        else:
+            out = out[index:]
+    if limit is not None:
+        out = out[:limit]
     return out
 
-@jobs.post("/{machine}")
-async def post_job(machine: str,
-                   job: psik.JobSpec,
-                   bg_tasks: BackgroundTasks) -> str:
+@jobs.post("")
+@jobs.post("/")
+async def post_job(job: psik.JobSpec,
+                   bg_tasks: BackgroundTasks,
+                   backend: Optional[str] = None,
+                  ) -> str:
     """
     Submit a job to run on a compute resource.
 
-      - machine: the machine to run the job on.
+      - backend: (optional) specific backend to receive the job
 
     If successful this api will return the jobid created.
     """
-    mgr = get_mgr(machine)
+    mgr = get_mgr(backend)
     return await submit_job(mgr, job, bg_tasks)
 
 # TODO: allow population of a job directory with
 # files (https://fastapi.tiangolo.com/reference/uploadfile/)
 # (posted as multipart form-data)
 #
-#@jobs.post("/{machine}/new")
+#@jobs.post("/{backend}/new")
 #async def create_with_files(files: list[UploadFile] = File(...)):
 #    for file in files:
 #        images.append({
@@ -106,11 +140,14 @@ async def post_job(machine: str,
 #        })
 #    return await create_job()
 
-@jobs.get("/{machine}/{jobid}")
-async def read_job(machine : str,
-                   jobid   : str) -> List[JobStepInfo]:
-    # Read job
-    pre = await get_job(machine, jobid)
+@jobs.get("/{jobid}")
+async def read_job(jobid: str,
+                   backend: Optional[str] = None) -> List[JobStepInfo]:
+    """Read job
+      - jobid: the job's ID string
+      - backend: (optional) the job's backend
+    """
+    pre = await get_job(jobid, backend)
     try:
         job = await psik.Job(pre)
     except Exception:
@@ -127,12 +164,12 @@ async def read_job(machine : str,
                     info = info))
     return out
 
-@jobs.delete("/{machine}/{jobid}")
-async def delete_job(machine : str,
-                     jobid   : str,
-                     bg_tasks: BackgroundTasks) -> None:
+@jobs.delete("/{jobid}")
+async def delete_job(jobid   : str,
+                     bg_tasks: BackgroundTasks,
+                     backend : Optional[str] = None) -> None:
     # Cancel job
-    pre = await get_job(machine, jobid)
+    pre = await get_job(jobid, backend)
     try:
         job = await psik.Job(pre)
     except Exception:

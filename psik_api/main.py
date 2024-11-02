@@ -4,10 +4,8 @@ from importlib.metadata import version
 __version__ = version(__package__)
 
 #from .dependencies import get_token_header
-from .status import status
-from .jobs import jobs
-from .callback import callback
-from .outputs import outputs
+from .routers.backends import backends
+from .routers.jobs import jobs
 
 # TODO: @cache a config-file here.
 
@@ -17,20 +15,12 @@ A network interface to resources provided through psik.
 
 tags_metadata : list[dict[str, Any]] = [
     {
-        "name": "status",
-        "description": "psik backend status info.",
+        "name": "backends",
+        "description": "psik backend information (e.g. status)",
     },
     {
         "name": "jobs",
         "description": "Manage jobs on configured compute backends.",
-    },
-    {
-        "name": "outputs",
-        "description": "Access compute job outputs.",
-    },
-    {
-        "name": "callback",
-        "description": "Callbacks used by downstream jobservers to update their status.",
     },
 ]
 
@@ -53,24 +43,14 @@ api = FastAPI(
     )
 
 api.include_router(
-    status,
-    prefix="/status",
-    tags = ["status"],
+    backends,
+    prefix="/backends",
+    tags = ["backends"],
 )
 api.include_router(
     jobs,
     prefix="/jobs",
     tags = ["jobs"],
-)
-api.include_router(
-    outputs,
-    prefix="/outputs",
-    tags = ["outputs"],
-)
-api.include_router(
-    callback,
-    prefix="/callback",
-    tags = ["callback"],
 )
 
 app = api

@@ -7,12 +7,12 @@ from pathlib import Path
 
 import psik
 
-def to_mgr(info):
+Pstr = Union[str, Path]
+
+def to_mgr(info) -> psik.JobManager:
     cfg = psik.Config.model_validate(info)
     cfg.prefix.mkdir(exist_ok=True, parents=True)
     return psik.JobManager(cfg)
-
-Pstr = Union[str, Path]
 
 @cache
 def get_managers(config_name : Optional[Pstr] = None
@@ -58,8 +58,14 @@ def get_managers(config_name : Optional[Pstr] = None
     return dict( (k,to_mgr(v)) for k,v in ans.items() )
 
 @cache
-def get_manager(mgr: str, config_name : Optional[Pstr] = None):
+def get_manager(mgr: Optional[str] = None,
+                config_name : Optional[Pstr] = None) -> psik.JobManager:
+    """Return the named manager / backend.
+    If mgr is None, returns the first defined backend.
+    """
     managers = get_managers(config_name)
+    if mgr is None and len(managers) > 0:
+        return managers[ managers.keys()[0] ]
     return managers[mgr]
 
 @cache

@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException
 
-from .config import get_manager, list_managers
+from ..config import get_manager, list_managers
 
 # Data models specific to status routes:
 class StatusValue(str, Enum):
@@ -31,16 +31,16 @@ class Note(BaseModel):
     active: Optional[bool] = Field(False, title="Active")
     timestamp: Optional[datetime] = Field(None, title="Timestamp")
 
-status = APIRouter()
+backends = APIRouter()
 
-@status.get("/")
-async def get_status(name : Optional[str] = None) -> Dict[str, SystemStatus]:
-    "Read system status information"
+@backends.get("/")
+async def list_backends(name : Optional[str] = None) -> Dict[str, SystemStatus]:
+    "Get information on all backends."
     #await update_status()
 
     get_info = lambda n: SystemStatus(name = n,
                     full_name = n,
-                    description = f"psik {get_manager(n).config.backend.type} job manager at {get_manager(n).config.prefix}",
+                    description = f"psik:{get_manager(n).config.backend.type} job manager at {get_manager(n).config.prefix}",
                     system_type = get_manager(n).config.backend.type,
                     notes = [],
                     status = StatusValue.active,
@@ -51,3 +51,9 @@ async def get_status(name : Optional[str] = None) -> Dict[str, SystemStatus]:
     elif name not in mgrs:
         raise HTTPException(status_code=404, detail="Item not found")
     return { name : get_info(name) }
+
+@backends.get("/{name}")
+async def get_backend(name : str) -> SystemStatus:
+    "Get information on a specific backend."
+    ans = await list_backends(name)
+    return ans[name]

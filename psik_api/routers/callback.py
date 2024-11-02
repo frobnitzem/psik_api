@@ -2,38 +2,27 @@ from typing import Annotated, Optional
 import logging
 _logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import HTTPException, Header
 
 import psik
 
 from .config import get_manager
 from .models import ErrorStatus, stamp_re
+from .jobs import jobs, get_job
 
-callback = APIRouter()
-
-@callback.post("/{machine}/{jobid}")
-async def do_callback(machine: str,
-                      jobid: str,
+@jobs.post("/{jobid}/state")
+async def do_callback(jobid: str,
                       cb: psik.Callback,
                       x_hub_signature_256: Annotated[Optional[str], Header()]
-                                            = None
+                                            = None,
+                      backend: Optional[str] = None,
                      ) -> ErrorStatus:
     """ Notify psik_api that a job has reached a given state.
     This will call `psik.Job.reached`, forwarding
     the callback along the chain.
     """
-
-    if not stamp_re.match(jobid):
-        raise HTTPException(status_code=404, detail="Item not found")
-    try:
-        mgr = get_manager(machine)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    base = mgr.prefix / jobid
-    if not base.is_dir():
-        raise HTTPException(status_code=404, detail="Item not found")
-
+ 
+    base = await get_job(jobid, backend)
     job = await psik.Job(base)
     if job.spec.client_secret:
         if x_hub_signature_256 is None:
@@ -47,3 +36,16 @@ async def do_callback(machine: str,
     if not ok:
         return ErrorStatus.ERROR
     return ErrorStatus.OK
+
+@jobs.get("/{jobid}/state")
+async def get_state(backend: Optional[str] = None) -> psik.JobState:
+    """Read the current job's state.
+
+      - backend: (optional) the compute resource name
+    """
+
+    base = await get_job(jobid, backend)
+    job = await psik.Job(base)
+
+    t, ndx, state, info = job.history[-1]
+    return state
