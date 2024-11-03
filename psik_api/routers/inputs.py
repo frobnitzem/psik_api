@@ -45,6 +45,9 @@ async def create_upload_file(jobid: str,
     chunksz = 16*1024 # 16 kb chunk size
 
     for file in files:
+        if file.filename is None:
+            raise HTTPException(status_code=404,
+                                detail="Cannot upload file with no name.")
         path = clean_rel_path(job, file.filename)
         if not path.parent.is_dir():
             raise HTTPException(status_code=404,

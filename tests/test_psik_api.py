@@ -11,3 +11,6 @@ def test_version():
 def test_read_main():
     response = client.get("/")
     assert response.status_code == 200
+
+    response = client.get("")
+    assert response.status_code == 200

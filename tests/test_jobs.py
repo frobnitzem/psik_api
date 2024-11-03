@@ -24,12 +24,13 @@ def test_get_jobs(setup_psik) -> None:
     for r in resp:
         JobStepInfo.model_validate(r)
 
-    response = client.get("/jobs")
-    assert response.status_code == 200
-    resp = response.json()
-    assert isinstance(resp, list)
-    for r in resp:
-        JobStepInfo.model_validate(r)
+    for route in ["/jobs", "/jobs/"]:
+        response = client.get(route)
+        assert response.status_code == 200
+        resp = response.json()
+        assert isinstance(resp, list)
+        for r in resp:
+            JobStepInfo.model_validate(r)
 
 def test_post_job(setup_psik) -> None:
     spec = JobSpec(script="echo 'OK'")

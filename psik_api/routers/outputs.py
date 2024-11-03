@@ -47,7 +47,7 @@ async def download_scripts(jobid: str, backend: Optional[str] = None,
 
 def stat_dir(path: Path) -> Dict[str, Dict[str,int]]:
     # Caution! the path is not checked to ensure
-    # it is safe to serve.
+    # it is safe to serve. (caller should do this)
     ans = {}
     for p in path.iterdir():
         st = p.stat()

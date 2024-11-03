@@ -2,10 +2,14 @@ from typing import Dict, Union, Optional, List
 import os
 import json
 from functools import cache
-
 from pathlib import Path
 
+from pydantic import BaseModel
 import psik
+
+class Config(BaseModel):
+    database_url: str = "sqlite+pysqlite:///:memory:"
+    backends: Dict[str, psik.Config]
 
 Pstr = Union[str, Path]
 
@@ -59,7 +63,7 @@ def get_managers(config_name : Optional[Pstr] = None
 
 @cache
 def get_manager(mgr: Optional[str] = None,
-                config_name : Optional[Pstr] = None) -> psik.JobManager:
+                config_name: Optional[Pstr] = None) -> psik.JobManager:
     """Return the named manager / backend.
     If mgr is None, returns the first defined backend.
     """
@@ -69,6 +73,6 @@ def get_manager(mgr: Optional[str] = None,
     return managers[mgr]
 
 @cache
-def list_managers(config_name : Optional[Pstr] = None) -> List[str]:
+def list_managers(config_name: Optional[Pstr] = None) -> List[str]:
     managers = get_managers(config_name)
     return list(managers.keys())

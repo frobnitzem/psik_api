@@ -40,9 +40,12 @@ async def do_callback(jobid: str,
     return ErrorStatus.OK
 
 @jobs.get("/{jobid}/state")
-async def get_state(backend: Optional[str] = None) -> psik.JobState:
+async def get_state(jobid: str,
+                    backend: Optional[str] = None
+                   ) -> psik.JobState:
     """Read the current job's state.
 
+      - jobid: str
       - backend: (optional) the compute resource name
     """
 
