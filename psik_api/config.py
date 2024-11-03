@@ -68,8 +68,11 @@ def get_manager(mgr: Optional[str] = None,
     If mgr is None, returns the first defined backend.
     """
     managers = get_managers(config_name)
-    if mgr is None and len(managers) > 0:
-        mgr = list(managers.keys())[0]
+    if mgr is None:
+        if len(managers) > 0:
+            mgr = list(managers.keys())[0]
+        else:
+            raise KeyError("No backends defined.")
     return managers[mgr]
 
 @cache
