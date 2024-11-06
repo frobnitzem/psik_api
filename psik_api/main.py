@@ -1,9 +1,14 @@
-from fastapi import Depends, FastAPI
-from typing import Any
+from contextlib import asynccontextmanager
+import logging
+from typing import Any, Dict, List
 from importlib.metadata import version
+_logger = logging.getLogger(__name__)
 __version__ = version(__package__)
 
-#from .dependencies import get_token_header
+from fastapi import Depends, FastAPI, Request
+
+from .config import load_config
+from .dependencies import setup_security, create_token, Authz
 from .routers.backends import backends
 from .routers.jobs import jobs
 
@@ -13,7 +18,7 @@ description = """
 A network interface to resources provided through psik.
 """
 
-tags_metadata : list[dict[str, Any]] = [
+tags_metadata : List[Dict[str, Any]] = [
     {
         "name": "backends",
         "description": "psik backend information (e.g. status)",
@@ -24,8 +29,18 @@ tags_metadata : list[dict[str, Any]] = [
     },
 ]
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _logger.debug("Starting lifespan.")
+    config = load_config()
+    # Setup activities
+    setup_security(config.authz)
+    yield
+    # Teardown activities
+
 api = FastAPI(
         title = "psik API",
+        lifespan = lifespan,
         openapi_url   = "/openapi.json",
         #root_path     = api_version_prefix,
         docs_url      = "/",
@@ -50,6 +65,7 @@ api.include_router(
 api.include_router(
     jobs,
     prefix="/jobs",
+    dependencies=[Authz],
     tags = ["jobs"],
 )
 
@@ -62,3 +78,7 @@ except ImportError:
 
 #app = FastAPI()
 #app.mount("/api", api)
+
+@app.get("/token")
+async def get_token(r: Request):
+    return create_token(r)

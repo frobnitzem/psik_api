@@ -8,11 +8,9 @@ from psik_api.main import api
 from psik_api.models import JobStepInfo
 
 from .test_config import setup_psik
+from .test_psik_api import client
 
-# docs: python-httpx.org/advanced/
-client = TestClient(api)
-
-def test_get_jobs(setup_psik) -> None:
+def test_get_jobs(client) -> None:
     response = client.get("/jobs", params={"backend":"_nohost"})
     assert response.status_code == 404 \
            or response.status_code == 422 
@@ -32,7 +30,7 @@ def test_get_jobs(setup_psik) -> None:
         for r in resp:
             JobStepInfo.model_validate(r)
 
-def test_post_job(setup_psik) -> None:
+def test_post_job(client) -> None:
     spec = JobSpec(script="echo 'OK'")
     response = client.post("/jobs", params={"backend":"default"},
                            json = spec.model_dump())
@@ -73,14 +71,14 @@ def test_post_job(setup_psik) -> None:
     response = client.delete(f"/jobs/{jobid}")
     assert response.status_code == 200
 
-def test_read_job(setup_psik) -> None:
+def test_read_job(client) -> None:
     response = client.get("/jobs/0000.123")
     assert response.status_code == 404
 
     response = client.get("/jobs/0000.123", params={"backend":"default"})
     assert response.status_code == 404
 
-def test_delete_job(setup_psik) -> None:
+def test_delete_job(client) -> None:
     response = client.delete("/jobs/0000.123")
     assert response.status_code == 404
 

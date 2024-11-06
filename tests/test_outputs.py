@@ -8,11 +8,9 @@ from psik_api.main import api
 from psik_api.models import JobStepInfo, JobState
 
 from .test_config import setup_psik
+from .test_psik_api import client
 
-# docs: python-httpx.org/advanced/
-client = TestClient(api)
-
-def test_post_job(setup_psik) -> None:
+def test_post_job(client) -> None:
     spec = JobSpec(script="echo 'OK' >out.txt; cat out.txt;")
     response = client.post("/jobs", json = spec.model_dump())
     assert response.status_code == 200

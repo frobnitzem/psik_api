@@ -113,18 +113,15 @@ async def post_job(job: psik.JobSpec,
     mgr = get_mgr(backend)
     return await submit_job(mgr, job, bg_tasks)
 
-# TODO: allow population of a job directory with
-# files (https://fastapi.tiangolo.com/reference/uploadfile/)
-# (posted as multipart form-data)
-#
-#@jobs.post("/{backend}/new")
-#async def create_with_files(files: list[UploadFile] = File(...)):
-#    for file in files:
-#        images.append({
-#            "filename": file.filename,
-#            "bytes": str(await file.read(10))
-#        })
-#    return await create_job()
+@jobs.post("/{jobid}/start")
+async def start_job(jobid: str,
+                    bg_tasks: BackgroundTasks,
+                    backend: Optional[str] = None
+                   ) -> None:
+    pre = await get_job(jobid, backend)
+    job = psik.Job(pre)
+    bg_tasks.add_task(job.submit)
+    return
 
 @jobs.get("/{jobid}")
 async def read_job(jobid: str,

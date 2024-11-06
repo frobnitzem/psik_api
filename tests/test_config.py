@@ -11,9 +11,11 @@ from psik_api.config import get_manager, list_managers
 def setup_psik(tmp_path):
     cfg = tmp_path/"psik_api.json"
     cfg.write_text("""
-    { "default": {
-        "prefix": "%s",
-        "backend": { "type": "local"}
+    { "backends": {
+        "default": {
+          "prefix": "%s",
+          "backend": {"type": "local"}
+        }
       }
     }
     """ % str(tmp_path/"psik_jobs"))
