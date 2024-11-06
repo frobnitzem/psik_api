@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
+from typing_extensions import Annotated
 import logging
-from typing import Any, Dict, List
 from importlib.metadata import version
 _logger = logging.getLogger(__name__)
-__version__ = version(__package__)
+version_tag = version(__package__)
 
-from fastapi import Depends, FastAPI, Request, PlainTextResponse
+from fastapi import Depends, FastAPI, Request, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.responses import PlainTextResponse
 
 from .config import load_config
-from .dependencies import setup_security, create_token, Authz
+from .dependencies import setup_security, create_token, Authz, token_scheme
 from .routers.backends import backends
 from .routers.jobs import jobs
 
@@ -47,7 +50,7 @@ api = FastAPI(
         docs_url      = "/",
         description   = description,
         summary      = "A web-interface to the psik command-line tool, with user management and a database backend.",
-        #version       = version_tag,
+        version       = version_tag,
         #terms_of_service="You're on your own here.",
         #contact={
         #    "name": "",
@@ -83,3 +86,25 @@ except ImportError:
 @app.get("/token", tags=["auth"], response_class=PlainTextResponse)
 async def get_token(r: Request):
     return create_token(r)
+
+from biscuit_auth import UnverifiedBiscuit, BiscuitValidationError
+
+@app.post("/token", tags=["auth"])
+async def show_token(credentials: Annotated[
+                      Optional[HTTPAuthorizationCredentials],
+                      Depends(token_scheme)] = None):
+    if credentials is None:
+        raise HTTPException(status_code=401,
+                                detail='required header Authorization: bearer b64-token')
+    if credentials.scheme.lower() != "bearer":
+        raise HTTPException(status_code=401,
+                                detail='header format should be Authorization: bearer b64-token')
+    biscuit = credentials.credentials
+
+    try:
+        x = UnverifiedBiscuit.from_base64(biscuit)
+    except BiscuitValidationError as e:
+        return {"BiscuitValidationError": str(e)}
+    return {"blocks": [
+        x.block_source(i) for i in range(x.block_count())
+    ]}
