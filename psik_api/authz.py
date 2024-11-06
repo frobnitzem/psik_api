@@ -67,7 +67,9 @@ class BaseAuthz:
     def add_rules(self, auth: Authorizer) -> bool:
         # Default rule - every user is a super-user,
         # and can delegate to any client.
-        auth.add_rule(Rule('right($u, $c, $r, $op) <- user($u), client($c), resource($r), operation($op);'))
+        #
+        # TODO: add_fact(Fact("owner({user},{path})", {...}))
+        auth.add_rule(Rule('right($u, $c, $p, $op) <- user($u), client($c), path($p), operation($op)'))
         return True
 
     def is_revoked(self, revocation_ids: List[str]) -> bool:
@@ -85,9 +87,9 @@ class BaseAuthz:
         auth.add_policy(
                   Policy("allow if user($u), "
                          "client($c), "
-                         "resource($res), "
+                         "path($p), "
                          "operation($op), "
-                         "right($u, $c, $res, $op);"
+                         "right($u, $c, $p, $op)"
                   )
               )
         try:

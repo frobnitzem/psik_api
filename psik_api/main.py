@@ -5,7 +5,7 @@ from importlib.metadata import version
 _logger = logging.getLogger(__name__)
 __version__ = version(__package__)
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, PlainTextResponse
 
 from .config import load_config
 from .dependencies import setup_security, create_token, Authz
@@ -19,13 +19,14 @@ A network interface to resources provided through psik.
 """
 
 tags_metadata : List[Dict[str, Any]] = [
-    {
-        "name": "backends",
-        "description": "psik backend information (e.g. status)",
+    { "name": "backends",
+      "description": "psik backend information (e.g. status)",
     },
-    {
-        "name": "jobs",
-        "description": "Manage jobs on configured compute backends.",
+    { "name": "jobs",
+      "description": "Manage jobs on configured compute backends.",
+    },
+    { "name": "auth",
+      "description": "Create authorization tokens.",
     },
 ]
 
@@ -79,6 +80,6 @@ except ImportError:
 #app = FastAPI()
 #app.mount("/api", api)
 
-@app.get("/token")
+@app.get("/token", tags=["auth"], response_class=PlainTextResponse)
 async def get_token(r: Request):
     return create_token(r)

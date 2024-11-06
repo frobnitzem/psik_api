@@ -5,7 +5,7 @@ import os
 import importlib
 
 from fastapi import Depends, HTTPException, Request
-from fastapi.security import OAuth2AuthorizationCodeBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from certified.fast import BiscuitAuthz
 
 def fail_auth(req, biscuit):
@@ -16,21 +16,31 @@ def fail_auth(req, biscuit):
 _create_token = lambda req: None # Don't generate tokens.
 _Authz = fail_auth
 
-_oauth2_scheme = OAuth2AuthorizationCodeBearer(
-                   authorizationUrl="/auth",
-                   tokenUrl="/token",
-                   auto_error=False,
-                 )
+token_scheme = HTTPBearer(
+    bearerFormat="biscuit",
+    scheme_name="Biscuit token for authorization",
+    description="Optional - may be obtained from /token",
+    auto_error=False,
+)
 
 def run_auth(req: Request,
-             biscuit: Annotated[Optional[str], Depends(_oauth2_scheme)] = None,
+             credentials: Annotated[Optional[
+                                 HTTPAuthorizationCredentials],
+                             Depends(token_scheme)] = None,
             ) -> bool:
+
     # Expects a header of the form:
     # "Authorization: bearer b64-encoded biscuit"
-    if biscuit is None:
+    if credentials is None:
         # Will create a token with user=client
         # if no biscuit has been provided.
         biscuit = create_token(req)
+    else:
+        if credentials.scheme.lower() != "bearer":
+            raise HTTPException(status_code=401,
+                                detail='header format should be Authorization: bearer b64-token')
+        biscuit = credentials.credentials
+
     try:
         return _Authz(req, biscuit)
     except KeyError as e:
