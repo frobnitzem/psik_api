@@ -12,9 +12,8 @@ from .jobs import jobs, get_job
 
 added_callback = True
 
-@jobs.post("/{jobid}/state")
-async def do_callback(jobid: str,
-                      cb: psik.Callback,
+@jobs.post("/callback")
+async def do_callback(cb: psik.Callback,
                       x_hub_signature_256: Annotated[Optional[str], Header()]
                                             = None,
                       backend: Optional[str] = None,
@@ -23,7 +22,7 @@ async def do_callback(jobid: str,
     This will call `psik.Job.reached`, forwarding
     the callback along the chain.
     """
- 
+    jobid = cb.jobid
     base = await get_job(jobid, backend)
     job = await psik.Job(base)
     if job.spec.client_secret:

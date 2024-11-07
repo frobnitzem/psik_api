@@ -8,11 +8,11 @@ from psik_api.main import api
 from psik_api.models import JobStepInfo, JobState
 
 from .test_config import setup_psik
+from .test_psik_api import client
 
 # docs: python-httpx.org/advanced/
-client = TestClient(api)
 
-def test_post_new(setup_psik) -> None:
+def test_post_new(client) -> None:
     spec = JobSpec(script="echo 'OK' >out.txt; cat out.txt;")
     response = client.post("/jobs/new", json = spec.model_dump())
     assert response.status_code == 200
@@ -40,3 +40,15 @@ def test_post_new(setup_psik) -> None:
     response = client.get(f"/jobs/{jobid}/files/input.txt")
     assert response.status_code == 200
     assert "Hello World!" in response.text
+
+    response = client.post(f"/jobs/{jobid}/start")
+    assert response.status_code == 200
+    print(response.text)
+
+    time.sleep(0.5)
+    response = client.get(f"/jobs/{jobid}")
+    resp = response.json()
+    assert isinstance(resp, list)
+    jobsteps = [JobStepInfo.model_validate(r) for r in resp]
+    print(jobsteps)
+    assert len(jobsteps) > 1

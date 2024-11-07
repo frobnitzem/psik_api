@@ -4,14 +4,8 @@
 PSI\_K API
 ==========
 
-This project presents a REST-HTTP API to
-functionality available through other APIs and
-command-line utilities on PSI\_K systems.
-
-This API is inspired by the NERSC "superfacility" API
-v1.2 and the ExaWorks JobSpec.  Differences come from
-the need to make the superfacility more portable between
-backends and the JobSpec more API-friendly.
+This project presents a REST-HTTP API to PSI\_K,
+a portable batch job submission interface.
 
 To setup and run:
 
@@ -42,23 +36,27 @@ To setup and run:
    Create a config file at `$PSIK_API_CONFIG` (defaults to
    `$VIRTUAL_ENV/etc/psik_api.json`) like,
 
-       { "default": {
+       { "backends": {
+           "default": {
              "prefix": "/tmp/psik_jobs",
              "backend": { "type": "local"}
+           }
          }
        }
 
    or
 
-       { "default": {
-           "prefix": "/ccs/proj/prj123/uname/frontier",
-           "psik_path": "/ccs/proj/prj123/uname/frontier/bin/psik",
-           "rc_path": "/ccs/proj/prj123/uname/frontier/bin/rc",
-           "backend": {
-             "type": "slurm",
-             "project_name": "prj123",
-             "attributes": {
+       { "backends": {
+           "default": {
+             "prefix": "/ccs/proj/prj123/uname/frontier",
+             "psik_path": "/ccs/proj/prj123/uname/frontier/bin/psik",
+             "rc_path": "/ccs/proj/prj123/uname/frontier/bin/rc",
+             "backend": {
+               "type": "slurm",
+               "project_name": "prj123",
+               "attributes": {
                "---gpu-bind": "closest"
+               }
              }
            }
          }
@@ -86,6 +84,9 @@ To setup and run:
         activate /ccs/proj/prj123/frontier
         certified serve psik_api.main:app https://127.0.0.1:4433
 
+    `certified` is a dependency of psik_api, so should already
+    be available if you have installed psik.
+    
 4. Browse / access the API at:
 
 ```
@@ -96,7 +97,7 @@ To setup and run:
 
 ```
     curl -X POST \
-      http://127.0.0.1:8000/jobs/default \
+      http://127.0.0.1:8000/jobs \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -110,12 +111,81 @@ To setup and run:
       }
     }'
 
-    curl -X 'GET' \
-      'http://127.0.0.1:8000/tasks/' \
+    curl -X GET \
+      'http://127.0.0.1:8000/jobs \
       -H 'accept: application/json'
 
-    # replace 1693992878.203 with your job's timestamp
-    curl -X 'GET' \
-      'http://127.0.0.1:8000/jobs/default/1693992878.203' \
+    # replace 1693992878.203 with your job's jobid
+    curl -X GET \
+      'http://127.0.0.1:8000/jobs/1693992878.203/logs' \
       -H 'accept: application/json'
 ```
+
+6. Create a job without submitting it, then send input
+   files, then submit
+
+```
+    # full JobSpec must be present at this point,
+    # but it will not run until later
+    curl -X POST \
+      http://127.0.0.1:8000/jobs/new \
+      -H 'accept: application/json' \
+      -H 'Content-Type: application/json' \
+      -d '{
+      "script": "cat data.txt",
+    }'
+
+    # replace 1693992878.203 with your job's jobid below
+    # Upload files
+    curl -X POST \
+      'http://127.0.0.1:8000/jobs/1693992878.203/files/ \
+      -H 'accept: application/json' \
+      --upload-file data.txt
+
+    # start the job
+    curl -X POST \
+      'http://127.0.0.1:8000/jobs/1693992878.203/start' \
+      -H 'accept: application/json'
+```
+
+## Authorization and Authentication
+
+The server has 2 modes of operation:
+
+  1. local -- when Request.transport is not available
+              (started without certified serve).
+
+       TODO: must be specifically requested with `--local`
+
+  3. TLS -- when started with `certified serve`
+
+In local mode, the system sees all jobs as owned by user
+`local:psik_api`.
+This mode is triggered when psik\_api is started without
+`certified serve`.
+
+In TLS mode, the `user` value is read from a biscuit
+token that the client provides on each request.
+This should be present in a header like,
+`Authorization: bearer b64-encoded-biscuit-value=`.
+If no biscuit is provided with the request, then one is
+auto-generated for that request by reading the client's
+TLS certificate.
+
+Note, a biscuit can also be generated with `user` == `client`
+by visiting the `/token` endpoint.
+
+A database tracks the owner of each job and grants GET/POST
+permissions only to a job's owner.
+This way, a user can delegate access permissions
+to a job to another user or an automated agent.
+
+Note that biscuits allow tokens to be attenuated
+by enforcing additional checks.
+For example, by checking mode=GET, they can confer a
+token that grants read-only access.
+
+Sites may customize the job access policy above by
+implementing a custom authz class -- replacing
+`psik_api.authz:BaseAuthz` in their `Config.authz`
+setting.
