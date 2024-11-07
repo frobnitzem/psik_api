@@ -18,7 +18,9 @@ from .routers.jobs import jobs
 # TODO: @cache a config-file here.
 
 description = """
-A network interface to resources provided through psik.
+Stop fussing with SLURM and shell background tasks.
+Setup, start, and monitor the progress of your batch
+jobs using modern, secure, REST-API routes and callbacks.
 """
 
 tags_metadata : List[Dict[str, Any]] = [
@@ -49,7 +51,7 @@ api = FastAPI(
         root_path     = "/v1",
         docs_url      = "/",
         description   = description,
-        summary      = "A web-interface to the psik command-line tool, with user management and a database backend.",
+        summary      = "An API for batch jobs and their files",
         version       = version_tag,
         #terms_of_service="You're on your own here.",
         #contact={
@@ -72,16 +74,6 @@ api.include_router(
     dependencies=[Authz],
     tags = ["jobs"],
 )
-
-app = api
-try:
-    from certified.formatter import log_request # type: ignore[import-not-found]
-    app.middleware("http")(log_request)
-except ImportError:
-    pass
-
-app = FastAPI()
-app.mount("/v1", api)
 
 @api.get("/token", tags=["auth"], response_class=PlainTextResponse)
 async def get_token(r: Request):
@@ -108,3 +100,14 @@ async def show_token(credentials: Annotated[
     return {"blocks": [
         x.block_source(i) for i in range(x.block_count())
     ]}
+
+#app = api
+app = FastAPI()
+app.mount("/v1", api)
+
+try:
+    from certified.formatter import log_request # type: ignore[import-not-found]
+    app.middleware("http")(log_request)
+except ImportError:
+    pass
+

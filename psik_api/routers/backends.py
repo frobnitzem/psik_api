@@ -33,6 +33,7 @@ class Note(BaseModel):
 
 backends = APIRouter()
 
+@backends.get("")
 @backends.get("/")
 async def list_backends(name : Optional[str] = None) -> Dict[str, SystemStatus]:
     "Get information on all backends."

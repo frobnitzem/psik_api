@@ -11,7 +11,7 @@ from .test_config import setup_psik
 client = TestClient(api)
 
 def test_get_backends(setup_psik):
-    for route in "/backends", "/backends/":
+    for route in ["/backends", "/backends/"]:
         response = client.get(route)
         assert response.status_code == 200
         resp = response.json()
@@ -20,7 +20,7 @@ def test_get_backends(setup_psik):
             SystemStatus.model_validate(r)
 
 def test_read_backends(setup_psik):
-    for route in "/backends", "/backends/":
+    for route in ["/backends", "/backends/"]:
         response = client.get(route, params={"name": "_nonexistent"})
         assert response.status_code == 404 or response.status_code == 422
 
