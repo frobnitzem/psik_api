@@ -46,7 +46,7 @@ api = FastAPI(
         title = "psik API",
         lifespan = lifespan,
         openapi_url   = "/openapi.json",
-        #root_path     = api_version_prefix,
+        root_path     = "/v1",
         docs_url      = "/",
         description   = description,
         summary      = "A web-interface to the psik command-line tool, with user management and a database backend.",
@@ -80,16 +80,16 @@ try:
 except ImportError:
     pass
 
-#app = FastAPI()
-#app.mount("/api", api)
+app = FastAPI()
+app.mount("/v1", api)
 
-@app.get("/token", tags=["auth"], response_class=PlainTextResponse)
+@api.get("/token", tags=["auth"], response_class=PlainTextResponse)
 async def get_token(r: Request):
     return create_token(r)
 
 from biscuit_auth import UnverifiedBiscuit, BiscuitValidationError
 
-@app.post("/token", tags=["auth"])
+@api.post("/token", tags=["auth"])
 async def show_token(credentials: Annotated[
                       Optional[HTTPAuthorizationCredentials],
                       Depends(token_scheme)] = None):

@@ -97,7 +97,7 @@ To setup and run:
 
 ```
     curl -X POST \
-      http://127.0.0.1:8000/jobs \
+      http://127.0.0.1:8000/v1/jobs \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -112,12 +112,12 @@ To setup and run:
     }'
 
     curl -X GET \
-      'http://127.0.0.1:8000/jobs \
+      'http://127.0.0.1:8000/v1/jobs \
       -H 'accept: application/json'
 
     # replace 1693992878.203 with your job's jobid
     curl -X GET \
-      'http://127.0.0.1:8000/jobs/1693992878.203/logs' \
+      'http://127.0.0.1:8000/v1/jobs/1693992878.203/logs' \
       -H 'accept: application/json'
 ```
 
@@ -128,7 +128,7 @@ To setup and run:
     # full JobSpec must be present at this point,
     # but it will not run until later
     curl -X POST \
-      http://127.0.0.1:8000/jobs/new \
+      http://127.0.0.1:8000/v1/jobs/new \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -138,13 +138,13 @@ To setup and run:
     # replace 1693992878.203 with your job's jobid below
     # Upload files
     curl -X POST \
-      'http://127.0.0.1:8000/jobs/1693992878.203/files/ \
+      'http://127.0.0.1:8000/v1/jobs/1693992878.203/files/ \
       -H 'accept: application/json' \
       --upload-file data.txt
 
     # start the job
     curl -X POST \
-      'http://127.0.0.1:8000/jobs/1693992878.203/start' \
+      'http://127.0.0.1:8000/v1/jobs/1693992878.203/start' \
       -H 'accept: application/json'
 ```
 
