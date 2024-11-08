@@ -4,6 +4,7 @@ version = "1.0.0"
 description = "API for a portable submission interface for batch jobs."
 authors = ["David M. Rogers <predictivestatmech@gmail.com>"]
 repository = "https://github.com/frobnitzem/psik_api"
+homepage = "https://frobnitzem.github.io/psik_api"
 license = "BSD-3-Clause"
 readme = "README.md"
 

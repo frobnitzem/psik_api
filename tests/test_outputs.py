@@ -19,7 +19,10 @@ def test_post_job(client) -> None:
 
     for i in range(100):
         time.sleep(0.1)
-        response = client.get(f"/jobs/{jobid}/state")
+        try:
+            response = client.get(f"/jobs/{jobid}/state")
+        except BlockingIOError:
+            continue
         assert response.status_code == 200
         state = JobState(response.json())
         if state == JobState.completed:

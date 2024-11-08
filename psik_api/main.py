@@ -37,7 +37,7 @@ tags_metadata : List[Dict[str, Any]] = [
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    _logger.debug("Starting lifespan.")
+    _logger.info("Starting lifespan.")
     config = load_config()
     # Setup activities
     setup_security(config.authz)

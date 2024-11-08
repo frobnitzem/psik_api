@@ -16,7 +16,8 @@ def setup_psik(tmp_path):
           "prefix": "%s",
           "backend": {"type": "local"}
         }
-      }
+      },
+      "authz": "local"
     }
     """ % str(tmp_path/"psik_jobs"))
     os.environ["PSIK_API_CONFIG"] = str(cfg)

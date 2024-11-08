@@ -8,9 +8,24 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from certified.fast import BiscuitAuthz
 
-def fail_auth(req, biscuit):
+def fail_auth(req: Request, biscuit: Optional[str]) -> bool:
     raise HTTPException(status_code=501,
                         detail='setup_security not called.')
+    return False
+
+def local_auth(req: Request, biscuit: Optional[str]) -> bool:
+    """ Implement local authorization mode --
+    passing only traffic originating from localhost
+    or a UNIX socket.  This ignores the biscuit contents.
+    """
+    if req.client is None: # UNIX socket...
+        return True
+    if req.client.host.startswith("127."): # IPv4
+        return True
+    if req.client.host.replace(":0",":") \
+                 .replace(":0",":").lstrip(":") == "1": # IPv6
+        return True
+    return False
 
 # place-holders until setup_security is called.
 _create_token = lambda req: None # Don't generate tokens.
@@ -54,7 +69,7 @@ def create_token(req: Request) -> Optional[str]:
 
 Authz = Depends(run_auth)
 
-def setup_security(policyfn: str):
+def setup_security(policyfn: str) -> None:
     """ Import the policyfn and run it to create
     authz, an instance of the authz class.
 
@@ -62,6 +77,9 @@ def setup_security(policyfn: str):
     """
     global _Authz, _create_token
 
+    if policyfn == "local":
+        _Authz = local_auth
+        return
     mod_name, fn_name = policyfn.split(':')
 
     sys.path.insert(0, os.getcwd())
@@ -74,5 +92,5 @@ def setup_security(policyfn: str):
     authz = authorizor_fn()
     _Authz = BiscuitAuthz("psik_api",
                           authz.get_pubkey,
-                          authz)
+                          authz) # type: ignore[assignment]
     _create_token = authz.create_token
