@@ -47,11 +47,11 @@ class BaseAuthz:
         return self.pubkey
 
     def create_token(self, req: Request) -> Optional[str]:
-        try:
-            client = get_clientname(req)
-        except KeyError as e: # local mode
-            if str(e) == "'transport'":
-                client = 'local:psik_api'
+        client = get_clientname(req)
+        if client.startswith("addr:"):
+            _logger.warning("Refusing to create token for (insecure) address-based client: %s", client)
+            return None
+        _logger.info("Creating token for %s", client)
 
         tok = BiscuitBuilder("""
             user({user_id});

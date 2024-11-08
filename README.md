@@ -150,19 +150,26 @@ To setup and run:
 
 ## Authorization and Authentication
 
-The server has 2 modes of operation:
+The server has 3 modes of operation:
 
-  1. local -- when Request.transport is not available
-              (started without certified serve).
+  1. local -- when specifically requested with
+     configuration setting "authz"="local".
+     In this mode, only requests originating from
+     the localhost IP (either v4 or v6) will
+     be served.  Also, this mode is the only
+     way to serve the full API through a UNIX domain socket.
 
-       TODO: must be specifically requested with `--local`
+  2. insecure -- when Request.transport is not available
+     (started without certified serve).  In this case
+     the user name is taken as 'addr:<addr>' -- based
+     on the client's address.  Psik_api will refuse
+     to issue tokens (hence no access to secured
+     routes) in this case.
 
   3. TLS -- when started with `certified serve`
 
 In local mode, the system sees all jobs as owned by user
 `local:psik_api`.
-This mode is triggered when psik\_api is started without
-`certified serve`.
 
 In TLS mode, the `user` value is read from a biscuit
 token that the client provides on each request.

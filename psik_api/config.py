@@ -14,7 +14,6 @@ class Config(BaseModel):
 
 Pstr = Union[str, Path]
 
-@cache
 def load_config(config_name : Optional[Pstr] = None) -> Config:
     """Load psik_api's configuration file.
 
@@ -23,10 +22,6 @@ def load_config(config_name : Optional[Pstr] = None) -> Config:
       2. $PSIK_API_CONFIG (if defined)
       3. $VIRTUAL_ENV/etc/psik_api.json (if VIRTUAL_ENV defined)
       4. /etc/psik_api.json
-
-    Note: The return value of this function is cached,
-          so changes to environment variables have
-          no effect after the first return from this function.
 
     Args:
       config_name: if defined, the configuration is read from this file
@@ -55,6 +50,10 @@ def get_managers(config_name : Optional[Pstr] = None
                 ) -> Dict[str, psik.JobManager]:
     """Lookup and return the dict of job managers found in
     psik_api's configuration file.
+
+    Note: The return value of this function is cached,
+          so changes to environment variables have
+          no effect after the first return from this function.
     """
     config = load_config(config_name)
     return dict( (k,to_mgr(v)) for k,v in config.backends.items() )
@@ -64,6 +63,10 @@ def get_manager(mgr: Optional[str] = None,
                 config_name: Optional[Pstr] = None) -> psik.JobManager:
     """Return the named manager / backend.
     If mgr is None, returns the first defined backend.
+
+    Note: The return value of this function is cached,
+          so changes to environment variables have
+          no effect after the first return from this function.
     """
     managers = get_managers(config_name)
     if mgr is None:
@@ -75,5 +78,10 @@ def get_manager(mgr: Optional[str] = None,
 
 @cache
 def list_managers(config_name: Optional[Pstr] = None) -> List[str]:
+    """
+    Note: The return value of this function is cached,
+          so changes to environment variables have
+          no effect after the first return from this function.
+    """
     managers = get_managers(config_name)
     return list(managers.keys())

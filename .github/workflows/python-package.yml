@@ -42,7 +42,8 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest --cov
+        pytest --cov tests/test_uninit.py
+        pytest --cov --ignore tests/test_uninit.py
 
     - name: Upload coverage to Codecov
       if: matrix.python-version == 3.11 && startsWith(matrix.os, 'ubuntu')
