@@ -7,10 +7,8 @@ from pathlib import Path
 from pydantic import BaseModel
 import psik
 
-class Config(BaseModel):
-    database_url: str = "sqlite+pysqlite:///:memory:"
+class Config(psik.Config):
     authz: str = "psik_api.authz:BaseAuthz"
-    backends: Dict[str, psik.Config]
 
 Pstr = Union[str, Path]
 
@@ -41,26 +39,8 @@ def load_config(config_name : Optional[Pstr] = None) -> Config:
     cfg = path.read_text(encoding='utf-8')
     return Config.model_validate_json(cfg)
 
-def to_mgr(cfg: psik.Config) -> psik.JobManager:
-    cfg.prefix.mkdir(exist_ok=True, parents=True)
-    return psik.JobManager(cfg)
-
 @cache
-def get_managers(config_name : Optional[Pstr] = None
-                ) -> Dict[str, psik.JobManager]:
-    """Lookup and return the dict of job managers found in
-    psik_api's configuration file.
-
-    Note: The return value of this function is cached,
-          so changes to environment variables have
-          no effect after the first return from this function.
-    """
-    config = load_config(config_name)
-    return dict( (k,to_mgr(v)) for k,v in config.backends.items() )
-
-@cache
-def get_manager(mgr: Optional[str] = None,
-                config_name: Optional[Pstr] = None) -> psik.JobManager:
+def get_manager(config_name: Optional[Pstr] = None) -> psik.JobManager:
     """Return the named manager / backend.
     If mgr is None, returns the first defined backend.
 
@@ -68,20 +48,16 @@ def get_manager(mgr: Optional[str] = None,
           so changes to environment variables have
           no effect after the first return from this function.
     """
-    managers = get_managers(config_name)
-    if mgr is None:
-        if len(managers) > 0:
-            mgr = list(managers.keys())[0]
-        else:
-            raise KeyError("No backends defined.")
-    return managers[mgr]
+    cfg = load_config(config_name)
+    cfg.prefix.mkdir(exist_ok=True, parents=True)
+    return psik.JobManager(cfg)
 
 @cache
-def list_managers(config_name: Optional[Pstr] = None) -> List[str]:
+def list_backends(config_name: Optional[Pstr] = None) -> List[str]:
     """
     Note: The return value of this function is cached,
           so changes to environment variables have
           no effect after the first return from this function.
     """
-    managers = get_managers(config_name)
-    return list(managers.keys())
+    cfg = load_config(config_name)
+    return list(cfg.backends.keys())

@@ -32,10 +32,10 @@ def test_secure(tmp_path):
     cfg.write_text("""
     { "backends": {
         "default": {
-          "prefix": "%s",
-          "backend": {"type": "local"}
+          "type": "local"
         }
-      }
+      },
+      "prefix": "%s"
     }
     """ % str(tmp_path/"psik_jobs"))
     os.environ["PSIK_API_CONFIG"] = str(cfg)

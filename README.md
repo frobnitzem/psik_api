@@ -38,30 +38,35 @@ To setup and run:
 
        { "backends": {
            "default": {
-             "prefix": "/tmp/psik_jobs",
-             "backend": { "type": "local"}
+             "type": "local"
            }
-         }
+         },
+         "prefix": "/tmp/psik_jobs"
        }
 
    or
 
-       { "backends": {
+       { "prefix": "/ccs/proj/prj123/uname/frontier",
+         "psik_path": "/ccs/proj/prj123/uname/frontier/bin/psik",
+         "rc_path": "/ccs/proj/prj123/uname/frontier/bin/rc",
+         "backends": {
            "default": {
-             "prefix": "/ccs/proj/prj123/uname/frontier",
-             "psik_path": "/ccs/proj/prj123/uname/frontier/bin/psik",
-             "rc_path": "/ccs/proj/prj123/uname/frontier/bin/rc",
-             "backend": {
-               "type": "slurm",
-               "project_name": "prj123",
-               "attributes": {
-               "---gpu-bind": "closest"
-               }
+             "type": "slurm",
+             "project_name": "prj123",
+             "attributes": {
+               "--gpu-bind": "closest"
              }
            }
          }
        }
 
+   you can quickly test this setup with (bash)
+
+       psik --config psik_api.json run <(echo '{"name":"test", "script":"hostname; pwd; ls -l ../"}')
+
+   or (rc)
+
+       psik --config psik_api.json run <{echo '{"name":"test", "script":"hostname; pwd; ls -l ../"}'}
 
 3. Start the server.  This can be done either directly
    by ssh-tunneling to a login node, or indirectly

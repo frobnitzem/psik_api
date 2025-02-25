@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..config import get_manager, list_managers
+from ..config import list_backends, load_config, Config
 
 # Data models specific to status routes:
 class StatusValue(str, Enum):
@@ -33,28 +33,31 @@ class Note(BaseModel):
 
 backends = APIRouter()
 
-@backends.get("")
-@backends.get("/")
-async def list_backends(name : Optional[str] = None) -> Dict[str, SystemStatus]:
-    "Get information on all backends."
-    #await update_status()
-
-    get_info = lambda n: SystemStatus(name = n,
+def get_info(cfg: Config, n: str) -> SystemStatus:
+    backend = cfg.backends[n]
+    return SystemStatus(name = n,
                     full_name = n,
-                    description = f"psik:{get_manager(n).config.backend.type} job manager at {get_manager(n).config.prefix}",
-                    system_type = get_manager(n).config.backend.type,
+                    description = f"psik:{backend.type} job manager at {cfg.prefix}",
+                    system_type = backend.type,
                     notes = [],
                     status = StatusValue.active,
                     updated_at = datetime.now())
-    mgrs = list_managers()
+
+@backends.get("")
+@backends.get("/")
+async def get_backends(name: Optional[str] = None) -> Dict[str, SystemStatus]:
+    "Get information on all backends."
+    #await update_status()
+
+    cfg = load_config()
+    mgrs = list_backends()
     if name is None:
-        return dict( (n,get_info(n)) for n in mgrs )
+        return dict( (n,get_info(cfg, n)) for n in mgrs )
     elif name not in mgrs:
         raise HTTPException(status_code=404, detail="Item not found")
-    return { name : get_info(name) }
+    return { name : get_info(cfg, name) }
 
 @backends.get("/{name}")
-async def get_backend(name : str) -> SystemStatus:
+async def get_backend(name: str) -> SystemStatus:
     "Get information on a specific backend."
-    ans = await list_backends(name)
-    return ans[name]
+    return (await get_backends(name))[name]

@@ -8,7 +8,6 @@ from fastapi.responses import FileResponse
 
 import psik
 
-from ..config import get_manager
 from ..models import ErrorStatus
 from ..internal.paths import clean_rel_path
 
@@ -18,12 +17,11 @@ added_outputs = True
 
 @jobs.get("/{jobid}/logs")
 @jobs.get("/{jobid}/logs/")
-async def list_outputs(jobid: str,
-                       backend: Optional[str] = None,
+async def list_outputs(jobid: str
                       ) -> Dict[str,str]:
     """ Retreive all job logs.
     """
-    logs = (await get_job(jobid, backend)) / "log"
+    logs = (await get_job(jobid)) / "log"
     if not logs.is_dir():
         raise HTTPException(status_code=404, detail="log dir missing")
     ans : Dict[str,str] = {}
@@ -33,11 +31,10 @@ async def list_outputs(jobid: str,
 
 @jobs.get("/{jobid}/scripts")
 @jobs.get("/{jobid}/scripts/")
-async def download_scripts(jobid: str, backend: Optional[str] = None,
-                          ) -> Dict[str,str]:
+async def download_scripts(jobid: str) -> Dict[str,str]:
     """ Retreive all job scripts.
     """
-    scripts = (await get_job(jobid, backend)) / "scripts"
+    scripts = (await get_job(jobid)) / "scripts"
     if not scripts.is_dir():
         raise HTTPException(status_code=404, detail="scripts dir missing")
     ans : Dict[str, str] = {}
@@ -59,21 +56,18 @@ def stat_dir(path: Path) -> Dict[str, Dict[str,int]]:
 
 @jobs.get("/{jobid}/files")
 @jobs.get("/{jobid}/files/")
-async def list_output(jobid: str,
-                      backend: Optional[str] = None,
-                     ) -> Dict[str,Dict[str,int]]:
+async def list_output(jobid: str) -> Dict[str,Dict[str,int]]:
     """ List all output files.
     """
-    job = await psik.Job(await get_job(jobid, backend))
+    job = await psik.Job(await get_job(jobid))
     work = Path(job.spec.directory)
     if not work.is_dir():
         raise HTTPException(status_code=404, detail="work dir missing")
     return stat_dir(work)
 
 @jobs.get("/{jobid}/files/{fname}")
-async def download_output(jobid: str, fname: Path,
-                          backend: Optional[str] = None):
-    job = await psik.Job(await get_job(jobid, backend))
+async def download_output(jobid: str, fname: Path):
+    job = await psik.Job(await get_job(jobid))
 
     path = clean_rel_path(job, fname)
 

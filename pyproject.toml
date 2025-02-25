@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psik_api"
-version = "1.0.0"
+version = "2.0.0"
 description = "API for a portable submission interface for batch jobs."
 authors = ["David M. Rogers <predictivestatmech@gmail.com>"]
 repository = "https://github.com/frobnitzem/psik_api"
@@ -14,9 +14,8 @@ fastapi = "^0.101.1"
 uvicorn = "^0.23.2"
 aiohttp = ">=3.8.5"
 python-multipart = "^0.0.6"
-psik = ">=1.3.0,<2.0"
+psik = ">=2.0.0,<3.0"
 importlib-metadata = "^6.8.0"
-sqlalchemy = "^2.0.36"
 certified = ">=0.10,<2.0"
 
 [tool.poetry.dev-dependencies]
