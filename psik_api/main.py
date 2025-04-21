@@ -102,7 +102,7 @@ async def show_token(credentials: Annotated[
     ]}
 
 #app = api
-app = FastAPI()
+app = FastAPI(lifespan = lifespan)
 app.mount("/v1", api)
 
 try:

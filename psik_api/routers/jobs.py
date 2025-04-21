@@ -43,8 +43,8 @@ async def get_job(jobid: str) -> Path:
         raise HTTPException(status_code=404, detail="Job not found")
     return Path(base)
 
+@jobs.get("/", include_in_schema=False)
 @jobs.get("")
-@jobs.get("/")
 async def get_jobs(index: int = 0,
                    limit: Optional[int] = None,
                    backend: Optional[str] = None,
@@ -87,8 +87,8 @@ async def get_jobs(index: int = 0,
         out = out[:limit]
     return out
 
+@jobs.post("/", include_in_schema=False)
 @jobs.post("")
-@jobs.post("/")
 async def post_job(job: psik.JobSpec,
                    bg_tasks: BackgroundTasks
                   ) -> str:

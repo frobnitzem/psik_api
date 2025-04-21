@@ -15,8 +15,8 @@ from .jobs import jobs, get_job
 
 added_outputs = True
 
+@jobs.get("/{jobid}/logs/", include_in_schema=False)
 @jobs.get("/{jobid}/logs")
-@jobs.get("/{jobid}/logs/")
 async def list_outputs(jobid: str
                       ) -> Dict[str,str]:
     """ Retreive all job logs.
@@ -29,8 +29,8 @@ async def list_outputs(jobid: str
         ans[p.name] = p.read_text()
     return ans
 
+@jobs.get("/{jobid}/scripts/", include_in_schema=False)
 @jobs.get("/{jobid}/scripts")
-@jobs.get("/{jobid}/scripts/")
 async def download_scripts(jobid: str) -> Dict[str,str]:
     """ Retreive all job scripts.
     """
@@ -54,8 +54,8 @@ def stat_dir(path: Path) -> Dict[str, Dict[str,int]]:
                       }
     return ans
 
+@jobs.get("/{jobid}/files/", include_in_schema=False)
 @jobs.get("/{jobid}/files")
-@jobs.get("/{jobid}/files/")
 async def list_output(jobid: str) -> Dict[str,Dict[str,int]]:
     """ List all output files.
     """

@@ -30,8 +30,8 @@ async def new_input(jobspec: psik.JobSpec) -> str:
     return job.stamp
 
 # see also: https://fastapi.tiangolo.com/tutorial/request-files/#multiple-file-uploads
+@jobs.post("/{jobid}/files/", include_in_schema=False)
 @jobs.post("/{jobid}/files")
-@jobs.post("/{jobid}/files/")
 async def create_upload_file(jobid: str,
                              files: Annotated[
                                 List[UploadFile],

@@ -43,8 +43,8 @@ def get_info(cfg: Config, n: str) -> SystemStatus:
                     status = StatusValue.active,
                     updated_at = datetime.now())
 
+@backends.get("/", include_in_schema=False)
 @backends.get("")
-@backends.get("/")
 async def get_backends(name: Optional[str] = None) -> Dict[str, SystemStatus]:
     "Get information on all backends."
     #await update_status()

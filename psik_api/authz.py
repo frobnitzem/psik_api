@@ -29,9 +29,8 @@ class BaseAuthz:
     and Authz functions from config.authz.
 
     If you wish to implement your own authorization
-    mechanism, it may be simpler to override
-    this method - then put your override in place
-    by referencing it from config.authz.
+    mechanism, it may be simpler to copy+modify this class,
+    then enable it by referencing it from config.authz.
     """
     def __init__(self):
         keypair = KeyPair() # new random keypair

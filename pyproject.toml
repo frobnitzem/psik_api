@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psik_api"
-version = "2.0.0"
+version = "2.0.1"
 description = "API for a portable submission interface for batch jobs."
 authors = ["David M. Rogers <predictivestatmech@gmail.com>"]
 repository = "https://github.com/frobnitzem/psik_api"
