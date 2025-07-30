@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 
 import psik
 
-from ..models import ErrorStatus
+from ..models import ErrorStatus, FileStat
 from ..internal.paths import clean_rel_path
 
 from .jobs import jobs, get_job
@@ -42,21 +42,27 @@ async def download_scripts(jobid: str) -> Dict[str,str]:
         ans[p.name] = p.read_text()
     return ans
 
-def stat_dir(path: Path) -> Dict[str, Dict[str,int]]:
+def stat_dir(path: Path, max_depth=0) -> Dict[str, FileStat]:
     # Caution! the path is not checked to ensure
     # it is safe to serve. (caller should do this)
     ans = {}
     for p in path.iterdir():
         st = p.stat()
-        ans[p.name] = { 'size': int(st.st_size),
-                        'atime': int(st.st_atime),
-                        'mtime': int(st.st_mtime)
-                      }
+        ans[p.name] = FileStat( size = int(st.st_size),
+                                atime = int(st.st_atime),
+                                mtime = int(st.st_mtime),
+                                children = False,
+                              )
+        if p.is_dir():
+            if max_depth > 0:
+                ans[p.name].children = stat_dir(p, max_depth-1)
+            else:
+                ans[p.name].children = True
     return ans
 
 @jobs.get("/{jobid}/files/", include_in_schema=False)
 @jobs.get("/{jobid}/files")
-async def list_output(jobid: str) -> Dict[str,Dict[str,int]]:
+async def list_output(jobid: str) -> Dict[str, FileStat]:
     """ List all output files.
     """
     job = await psik.Job(await get_job(jobid))
@@ -65,7 +71,7 @@ async def list_output(jobid: str) -> Dict[str,Dict[str,int]]:
         raise HTTPException(status_code=404, detail="work dir missing")
     return stat_dir(work)
 
-@jobs.get("/{jobid}/files/{fname}")
+@jobs.get("/{jobid}/files/{fname:path}")
 async def download_output(jobid: str, fname: Path):
     job = await psik.Job(await get_job(jobid))
 
