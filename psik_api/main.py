@@ -48,7 +48,7 @@ api = FastAPI(
         title = "psik API",
         lifespan = lifespan,
         openapi_url   = "/openapi.json",
-        root_path     = "/v1",
+        root_path     = "/v2",
         docs_url      = "/",
         description   = description,
         summary      = "An API for batch jobs and their files",
@@ -103,11 +103,10 @@ async def show_token(credentials: Annotated[
 
 #app = api
 app = FastAPI(lifespan = lifespan)
-app.mount("/v1", api)
+app.mount("/v2", api)
 
 try:
     from certified.formatter import log_request # type: ignore[import-not-found]
     app.middleware("http")(log_request)
 except ImportError:
     pass
-
