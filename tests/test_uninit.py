@@ -43,5 +43,5 @@ def test_secure(tmp_path):
     with TestClient(api) as client:
         with pytest.raises(KeyError): # 0.10.0 raises this
             response = client.get("/jobs")
-            assert response.status_code == 403 # 1.0 does this.
+            assert response.status_code == 401 # 1.0 does this.
             raise KeyError("ok")
