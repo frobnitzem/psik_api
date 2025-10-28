@@ -15,7 +15,7 @@ from fastapi import (
 )
 import psik
 
-from ..internal.tasks import submit_job
+from ..internal.tasks import new_job
 from ..models import JobStepInfo, stamp_re
 from ..config import get_manager
 
@@ -89,16 +89,22 @@ async def get_jobs(index: int = 0,
 
 @jobs.post("/", include_in_schema=False)
 @jobs.post("")
-async def post_job(job: psik.JobSpec,
-                   bg_tasks: BackgroundTasks
+async def post_job(spec: psik.JobSpec,
+                   bg_tasks: BackgroundTasks,
+                   submit: bool = True,
                   ) -> str:
     """
     Submit a job to run on a compute resource.
+    If submit is True (default), also submits the job to the
+    queue.
 
-    If successful this api will return the jobid created.
+    On success, this API will return the jobid created.
     """
     mgr = get_manager()
-    return await submit_job(mgr, job, bg_tasks)
+    job = await new_job(spec, mgr)
+    if submit:
+        bg_tasks.add_task(job.submit)
+    return job.stamp
 
 @jobs.post("/{jobid}/start")
 async def start_job(jobid: str,
@@ -112,6 +118,7 @@ async def start_job(jobid: str,
 @jobs.get("/{jobid}")
 async def read_job(jobid: str) -> List[JobStepInfo]:
     """Read job
+
       - jobid: the job's ID string
     """
     pre = await get_job(jobid)
