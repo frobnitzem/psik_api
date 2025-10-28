@@ -6,7 +6,6 @@ from fastapi import HTTPException, Header
 
 import psik
 
-from ..config import get_manager
 from ..models import ErrorStatus, stamp_re
 from .jobs import jobs, get_job
 
@@ -15,15 +14,14 @@ added_callback = True
 @jobs.post("/callback")
 async def do_callback(cb: psik.Callback,
                       x_hub_signature_256: Annotated[Optional[str], Header()]
-                                            = None,
-                      backend: Optional[str] = None,
+                                            = None
                      ) -> ErrorStatus:
     """ Notify psik_api that a job has reached a given state.
     This will call `psik.Job.reached`, forwarding
     the callback along the chain.
     """
     jobid = cb.jobid
-    base = await get_job(jobid, backend)
+    base = await get_job(jobid)
     job = await psik.Job(base)
     if job.spec.client_secret:
         if x_hub_signature_256 is None:
@@ -39,17 +37,13 @@ async def do_callback(cb: psik.Callback,
     return ErrorStatus.OK
 
 @jobs.get("/{jobid}/state")
-async def get_state(jobid: str,
-                    backend: Optional[str] = None
-                   ) -> psik.JobState:
+async def get_state(jobid: str) -> psik.JobState:
     """Read the current job's state.
 
       - jobid: str
-      - backend: (optional) the compute resource name
     """
 
-    base = await get_job(jobid, backend)
+    base = await get_job(jobid)
     job = await psik.Job(base)
 
-    t, ndx, state, info = job.history[-1]
-    return state
+    return job.history[-1].state

@@ -12,8 +12,10 @@ from .test_psik_api import client
 
 def test_get_jobs(client) -> None:
     response = client.get("/jobs", params={"backend":"_nohost"})
-    assert response.status_code == 404 \
-           or response.status_code == 422 
+    assert response.status_code == 200
+    resp = response.json()
+    assert isinstance(resp, list)
+    assert len(resp) == 0
 
     response = client.get("/jobs", params={"backend":"default"})
     assert response.status_code == 200
@@ -48,12 +50,6 @@ def test_post_job(client) -> None:
 
     response = client.delete(f"/jobs/{jobid}", params={"backend":"default"})
     assert response.status_code == 200
-
-    ## test nonexistent backend
-    spec = JobSpec(name="hello", script="echo world")
-    response = client.post("/jobs", params={"backend":"_nonexistent"},
-                           json = spec.model_dump())
-    assert response.status_code//100 == 4
 
     ## test no explicit backend
     spec = JobSpec(name="hello", script="echo world")

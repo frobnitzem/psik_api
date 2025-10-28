@@ -1,5 +1,6 @@
 # Data models shared by many components:
 from enum import Enum
+from typing import Union, Dict
 import re
 
 from pydantic import BaseModel, Field
@@ -19,3 +20,9 @@ class JobStepInfo(BaseModel):
     jobndx  : int
     state   : JobState
     info    : int
+
+class FileStat(BaseModel):
+    size: int
+    atime: int
+    mtime: int
+    children: Union[bool, Dict[str,"FileStat"]]

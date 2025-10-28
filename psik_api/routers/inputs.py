@@ -12,16 +12,16 @@ import psik
 
 from ..models import ErrorStatus, stamp_re
 from ..internal.paths import clean_rel_path
-from .jobs import jobs, get_mgr, get_job
+from .jobs import jobs, get_job
+from ..config import get_manager
 
 added_inputs = True
 
 @jobs.post("/new")
-async def new_input(jobspec: psik.JobSpec,
-                    machine: Optional[str] = None) -> str:
+async def new_input(jobspec: psik.JobSpec) -> str:
     "Create a new job, but do not submit it."
 
-    mgr = get_mgr(machine)
+    mgr = get_manager()
     try:
         job = await mgr.create(jobspec)
     except AssertionError as e:
@@ -30,17 +30,16 @@ async def new_input(jobspec: psik.JobSpec,
     return job.stamp
 
 # see also: https://fastapi.tiangolo.com/tutorial/request-files/#multiple-file-uploads
+@jobs.post("/{jobid}/files/", include_in_schema=False)
 @jobs.post("/{jobid}/files")
-@jobs.post("/{jobid}/files/")
 async def create_upload_file(jobid: str,
                              files: Annotated[
                                 List[UploadFile],
                                 File(description="Files uploaded as multipart/form-data")
-                             ],
-                             backend: Optional[str] = None
+                             ]
                             ):
     #return {"filenames": [file.filename for file in files]}
-    job = await psik.Job(await get_job(jobid, backend))
+    job = await psik.Job(await get_job(jobid))
 
     chunksz = 16*1024 # 16 kb chunk size
 

@@ -8,7 +8,7 @@ from certified.fast import get_clientname
 
 from biscuit_auth import (
         BiscuitBuilder,
-        Authorizer,
+        AuthorizerBuilder,
         KeyPair,
         Biscuit,
         PublicKey,
@@ -29,9 +29,8 @@ class BaseAuthz:
     and Authz functions from config.authz.
 
     If you wish to implement your own authorization
-    mechanism, it may be simpler to override
-    this method - then put your override in place
-    by referencing it from config.authz.
+    mechanism, it may be simpler to copy+modify this class,
+    then enable it by referencing it from config.authz.
     """
     def __init__(self):
         keypair = KeyPair() # new random keypair
@@ -64,7 +63,7 @@ class BaseAuthz:
         return tok.build(self.privkey).to_base64()
         #return None
 
-    def add_rules(self, auth: Authorizer) -> bool:
+    def add_rules(self, auth: AuthorizerBuilder) -> bool:
         # Default rule - every user is a super-user,
         # and can delegate to any client.
         #
@@ -76,8 +75,13 @@ class BaseAuthz:
         return False
 
     def __call__(self,
-                 auth: Authorizer,
-                 revocation_ids: List[str]) -> bool:
+                 auth: AuthorizerBuilder,
+                 token: Biscuit) -> bool:
+        if isinstance(token, Biscuit):
+            revocation_ids = token.revocation_ids
+        else: # pre-v0.4 API
+            revocation_ids = token # type: ignore[assignment]
+
         if self.is_revoked(revocation_ids):
             return False
 
@@ -93,7 +97,10 @@ class BaseAuthz:
                   )
               )
         try:
-            auth.authorize()
+            if isinstance(auth, AuthorizerBuilder):
+                auth.build(token).authorize()
+            else: # pre-v0.4 API
+                auth.authorize()
         except AuthorizationError:
             return False
         return True

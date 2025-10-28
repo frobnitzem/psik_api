@@ -15,7 +15,7 @@ from fastapi import (
 )
 import psik
 
-from ..internal.tasks import submit_job
+from ..internal.tasks import new_job
 from ..models import JobStepInfo, stamp_re
 from ..config import get_manager
 
@@ -33,30 +33,18 @@ from ..config import get_manager
 jobs = APIRouter(responses={
         401: {"description": "Unauthorized"}})
 
-KeyVals = Annotated[str, Query(pattern=r"^[^=]+=[^=]+$")]
-
-def get_mgr(backend: Optional[str] = None) -> psik.JobManager:
-    try:
-        mgr = get_manager(backend)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Backend not found")
-    return mgr
-
-async def get_job(jobid: str, backend: Optional[str] = None) -> Path:
+async def get_job(jobid: str) -> Path:
     if not stamp_re.match(jobid):
         raise HTTPException(status_code=400, detail="Invalid jobid")
-    try:
-        mgr = get_manager(backend)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Invalid backend")
+    mgr = get_manager()
 
     base = mgr.prefix / jobid
     if not await base.is_dir():
         raise HTTPException(status_code=404, detail="Job not found")
     return Path(base)
 
+@jobs.get("/", include_in_schema=False)
 @jobs.get("")
-@jobs.get("/")
 async def get_jobs(index: int = 0,
                    limit: Optional[int] = None,
                    backend: Optional[str] = None,
@@ -72,21 +60,23 @@ async def get_jobs(index: int = 0,
       - state: (optional) filter by job state
     """
 
-    # TODO: use a real db query here.
-    mgr = get_mgr(backend)
+    mgr = get_manager()
 
     out = []
     async for job in mgr.ls():
-        t, ndx, jstate, info = job.history[-1]
-        if state is not None and jstate != state:
+        if backend and job.spec.backend != backend:
+            # filter out jobs from other backends
+            continue
+        trs = job.history[-1]
+        if state is not None and trs.state != state:
             continue
         out.append(JobStepInfo(
                     jobid = job.stamp,
                     name = job.spec.name or '',
-                    updated = t,
-                    jobndx = ndx,
-                    state = jstate,
-                    info = info))
+                    updated = trs.time,
+                    jobndx = trs.jobndx,
+                    state = trs.state,
+                    info = trs.info))
     out.sort(key = lambda x: -float(x.jobid))
     if index is not None and index > 0:
         if index >= len(out):
@@ -97,62 +87,62 @@ async def get_jobs(index: int = 0,
         out = out[:limit]
     return out
 
+@jobs.post("/", include_in_schema=False)
 @jobs.post("")
-@jobs.post("/")
-async def post_job(job: psik.JobSpec,
+async def post_job(spec: psik.JobSpec,
                    bg_tasks: BackgroundTasks,
-                   backend: Optional[str] = None,
+                   submit: bool = True,
                   ) -> str:
     """
     Submit a job to run on a compute resource.
+    If submit is True (default), also submits the job to the
+    queue.
 
-      - backend: (optional) specific backend to receive the job
-
-    If successful this api will return the jobid created.
+    On success, this API will return the jobid created.
     """
-    mgr = get_mgr(backend)
-    return await submit_job(mgr, job, bg_tasks)
+    mgr = get_manager()
+    job = await new_job(spec, mgr)
+    if submit:
+        bg_tasks.add_task(job.submit)
+    return job.stamp
 
 @jobs.post("/{jobid}/start")
 async def start_job(jobid: str,
-                    bg_tasks: BackgroundTasks,
-                    backend: Optional[str] = None
+                    bg_tasks: BackgroundTasks
                    ) -> None:
-    pre = await get_job(jobid, backend)
+    pre = await get_job(jobid)
     job = psik.Job(pre)
     bg_tasks.add_task(job.submit)
     return
 
 @jobs.get("/{jobid}")
-async def read_job(jobid: str,
-                   backend: Optional[str] = None) -> List[JobStepInfo]:
+async def read_job(jobid: str) -> List[JobStepInfo]:
     """Read job
+
       - jobid: the job's ID string
-      - backend: (optional) the job's backend
     """
-    pre = await get_job(jobid, backend)
+    pre = await get_job(jobid)
     try:
         job = await psik.Job(pre)
     except Exception:
         raise HTTPException(status_code=500, detail="Error reading job")
 
     out = []
-    for t, ndx, state, info in job.history:
+    for trs in job.history:
         out.append(JobStepInfo(
                     jobid = job.stamp,
                     name = job.spec.name or '',
-                    updated = t,
-                    jobndx = ndx,
-                    state = state,
-                    info = info))
+                    updated = trs.time,
+                    jobndx = trs.jobndx,
+                    state = trs.state,
+                    info = trs.info))
     return out
 
 @jobs.delete("/{jobid}")
 async def delete_job(jobid   : str,
-                     bg_tasks: BackgroundTasks,
-                     backend : Optional[str] = None) -> None:
+                     bg_tasks: BackgroundTasks) -> None:
     # Cancel job
-    pre = await get_job(jobid, backend)
+    pre = await get_job(jobid)
     try:
         job = await psik.Job(pre)
     except Exception:
