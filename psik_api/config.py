@@ -51,13 +51,3 @@ def get_manager(config_name: Optional[Pstr] = None) -> psik.JobManager:
     cfg = load_config(config_name)
     cfg.prefix.mkdir(exist_ok=True, parents=True)
     return psik.JobManager(cfg)
-
-@cache
-def list_backends(config_name: Optional[Pstr] = None) -> List[str]:
-    """
-    Note: The return value of this function is cached,
-          so changes to environment variables have
-          no effect after the first return from this function.
-    """
-    cfg = load_config(config_name)
-    return list(cfg.backends.keys())

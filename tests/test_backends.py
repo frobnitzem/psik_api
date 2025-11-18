@@ -3,7 +3,7 @@ from typing import List
 from fastapi.testclient import TestClient
 
 from psik_api.main import api
-from psik_api.routers.backends import SystemStatus
+from psik import BackendConfig
 
 from .test_config import setup_psik
 
@@ -17,7 +17,7 @@ def test_get_backends(setup_psik):
         resp = response.json()
         assert isinstance(resp, dict)
         for r in resp.values():
-            SystemStatus.model_validate(r)
+            BackendConfig.model_validate(r)
 
 def test_read_backends(setup_psik):
     for route in ["/backends", "/backends/"]:
@@ -30,7 +30,7 @@ def test_read_backends(setup_psik):
         assert isinstance(resp, dict)
         assert len(resp) == 1
         r = resp["default"]
-        SystemStatus.model_validate(r)
+        BackendConfig.model_validate(r)
 
 def test_read_backend(setup_psik):
     response = client.get("/backends/_nonexistent")
@@ -38,4 +38,4 @@ def test_read_backend(setup_psik):
 
     response = client.get("/backends/default")
     assert response.status_code == 200
-    SystemStatus.model_validate_json(response.text)
+    BackendConfig.model_validate_json(response.text)

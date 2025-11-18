@@ -17,18 +17,6 @@ from ..config import get_manager
 
 added_inputs = True
 
-@jobs.post("/new")
-async def new_input(jobspec: psik.JobSpec) -> str:
-    "Create a new job, but do not submit it."
-
-    mgr = get_manager()
-    try:
-        job = await mgr.create(jobspec)
-    except AssertionError as e:
-        raise HTTPException(status_code=400,
-                            detail=f"Error creating job: {str(e)}")
-    return job.stamp
-
 # see also: https://fastapi.tiangolo.com/tutorial/request-files/#multiple-file-uploads
 @jobs.post("/{jobid}/files/", include_in_schema=False)
 @jobs.post("/{jobid}/files")
@@ -38,6 +26,11 @@ async def create_upload_file(jobid: str,
                                 File(description="Files uploaded as multipart/form-data")
                              ]
                             ):
+    """
+    Upload a group of files to the job's work directory.
+
+    See https://fastapi.tiangolo.com/tutorial/request-files/#multiple-file-uploads
+    """
     #return {"filenames": [file.filename for file in files]}
     job = await psik.Job(await get_job(jobid))
 

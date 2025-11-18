@@ -9,12 +9,11 @@ a portable batch job submission interface.
 
 To setup and run:
 
-1. Install the rc shell and psik\_api (from the site you intend to use):
+1. Install psik\_api (from the site you intend to use):
 
 ```
      module load python/3
      python3 -m venv
-     getrc.sh venv # https://github.com/frobnitzem/rcrc
      VIRTUAL_ENV=/full/path/to/venv
      PATH=$VIRTUAL_ENV/bin:$PATH
    
@@ -24,11 +23,6 @@ To setup and run:
 2. Setup a psik\_api config file.  This file is a key-value store
    mapping machine names to psik config files
    -- one for each scheduler configuration.
-
-   Be careful with the `psik_path` and `rc_path`
-   options here. These paths must be
-   accessible during the execution of the job, and
-   on the host running psik\_api.
 
    Note that the `PSIK_CONFIG` environment variable does not
    influence the server running `psik_api`.
@@ -47,8 +41,6 @@ To setup and run:
    or
 
        { "prefix": "/ccs/proj/prj123/uname/frontier",
-         "psik_path": "/ccs/proj/prj123/uname/frontier/bin/psik",
-         "rc_path": "/ccs/proj/prj123/uname/frontier/bin/rc",
          "backends": {
            "default": {
              "type": "slurm",
@@ -62,11 +54,11 @@ To setup and run:
 
    you can quickly test this setup with (bash)
 
-       psik --config psik_api.json run <(echo '{"name":"test", "script":"hostname; pwd; ls -l ../"}')
+       psik -vv --config psik_api.json run <(echo '{"name":"test", "script":"hostname; pwd; ls -l ../"}')
 
    or (rc)
 
-       psik --config psik_api.json run <{echo '{"name":"test", "script":"hostname; pwd; ls -l ../"}'}
+       psik -vv --config psik_api.json run <{echo '{"name":"test", "script":"hostname; pwd; ls -l ../"}'}
 
 3. Start the server.  This can be done either directly
    by ssh-tunneling to a login node, or indirectly
@@ -75,7 +67,7 @@ To setup and run:
    The ssh-tunnel method is simplest,
 
 ```
-    ssh frontier -L 127.0.0.1:8000:/ccs/home/uname/psik_api.sock
+    ssh frontier -L 127.0.0.1:8000:./psik_api.sock
     activate /ccs/proj/prj123/frontier
     uvicorn psik_api.main:app --log-level info --uds $HOME/psik_api.sock
 ```
@@ -91,18 +83,21 @@ To setup and run:
 
     `certified` is a dependency of psik_api, so should already
     be available if you have installed psik.
-    
+
+    A `Dockerfile` is provided in this repo to faciliate
+    running psik as a Kubernetes service.
+
 4. Browse / access the API at:
 
 ```
-   http://127.0.0.1:8000/
+   http://127.0.0.1:8000/v2
 ```
 
 5. Send a test job:
 
 ```
     curl -X POST \
-      http://127.0.0.1:8000/v1/jobs \
+      http://127.0.0.1:8000/v2/jobs \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -117,12 +112,12 @@ To setup and run:
     }'
 
     curl -X GET \
-      'http://127.0.0.1:8000/v1/jobs \
+      'http://127.0.0.1:8000/v2/jobs \
       -H 'accept: application/json'
 
     # replace 1693992878.203 with your job's jobid
     curl -X GET \
-      'http://127.0.0.1:8000/v1/jobs/1693992878.203/logs' \
+      'http://127.0.0.1:8000/v2/jobs/1693992878.203/logs' \
       -H 'accept: application/json'
 ```
 
@@ -133,7 +128,7 @@ To setup and run:
     # full JobSpec must be present at this point,
     # but it will not run until later
     curl -X POST \
-      http://127.0.0.1:8000/v1/jobs/new \
+      http://127.0.0.1:8000/v2/jobs/new \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -143,13 +138,13 @@ To setup and run:
     # replace 1693992878.203 with your job's jobid below
     # Upload files
     curl -X POST \
-      'http://127.0.0.1:8000/v1/jobs/1693992878.203/files/ \
+      'http://127.0.0.1:8000/v2/jobs/1693992878.203/files/ \
       -H 'accept: application/json' \
       --upload-file data.txt
 
     # start the job
     curl -X POST \
-      'http://127.0.0.1:8000/v1/jobs/1693992878.203/start' \
+      'http://127.0.0.1:8000/v2/jobs/1693992878.203/start' \
       -H 'accept: application/json'
 ```
 

@@ -14,7 +14,7 @@ from .test_psik_api import client
 
 def test_post_new(client) -> None:
     spec = JobSpec(script="echo 'OK' >out.txt; cat out.txt;")
-    response = client.post("/jobs/new", json = spec.model_dump())
+    response = client.post("/jobs", params={"submit": False}, json = spec.model_dump())
     assert response.status_code == 200
     jobid = response.json()
     assert isinstance(jobid, str)

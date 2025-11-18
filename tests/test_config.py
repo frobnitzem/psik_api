@@ -5,7 +5,7 @@ import os
 import json
 
 import psik
-from psik_api.config import get_manager, list_backends
+from psik_api.config import get_manager, load_config
 
 @pytest.fixture
 def setup_psik(tmp_path):
@@ -26,7 +26,8 @@ def setup_psik(tmp_path):
 def test_config(setup_psik):
     mgr = get_manager(setup_psik)
     assert isinstance(mgr, psik.JobManager)
-    assert tuple(list_backends(setup_psik)) == ("default",)
+    cfg = load_config(setup_psik)
+    assert tuple(cfg.backends.keys()) == ("default",)
     #with pytest.raises(json.decoder.JSONDecodeError):
     #    pass
     mgr = get_manager(setup_psik)
