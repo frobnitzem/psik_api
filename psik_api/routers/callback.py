@@ -23,12 +23,13 @@ async def do_callback(cb: psik.Callback,
     jobid = cb.jobid
     base = await get_job(jobid)
     job = await psik.Job(base)
-    if job.spec.client_secret:
+    # TODO: change cb_secret to a stored client_secret here...
+    if job.spec.cb_secret:
         if x_hub_signature_256 is None:
             raise HTTPException(status_code=403, detail="x-hub-signature-256 header is missing!")
         psik.web.verify_signature(
                    cb.model_dump_json(), # FIXME - get actual message body
-                   job.spec.client_secret.get_secret_value(),
+                   job.spec.cb_secret.get_secret_value(),
                    x_hub_signature_256)
 
     ok = await job.reached(cb.jobndx, cb.state, cb.info)
