@@ -29,19 +29,6 @@ async def list_outputs(jobid: str
         ans[p.name] = p.read_text()
     return ans
 
-@jobs.get("/{jobid}/scripts/", include_in_schema=False)
-@jobs.get("/{jobid}/scripts")
-async def download_scripts(jobid: str) -> Dict[str,str]:
-    """ Retreive all job scripts.
-    """
-    scripts = (await get_job(jobid)) / "scripts"
-    if not scripts.is_dir():
-        raise HTTPException(status_code=404, detail="scripts dir missing")
-    ans : Dict[str, str] = {}
-    for p in scripts.iterdir():
-        ans[p.name] = p.read_text()
-    return ans
-
 def stat_dir(path: Path, max_depth=0) -> Dict[str, FileStat]:
     # Caution! the path is not checked to ensure
     # it is safe to serve. (caller should do this)

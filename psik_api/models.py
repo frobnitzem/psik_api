@@ -19,7 +19,7 @@ class JobStepInfo(BaseModel):
     updated : float
     jobndx  : int
     state   : JobState
-    info    : int
+    info    : str
 
 class FileStat(BaseModel):
     size: int

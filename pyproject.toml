@@ -3,7 +3,7 @@ authors = [
     {name = "David M. Rogers", email = "predictivestatmech@gmail.com"}
 ]
 name = "psik_api"
-version = "2.1.0"
+version = "3.0.0"
 description = "API for a portable submission interface for batch jobs."
 license = "BSD-3-Clause"
 readme = "README.md"
@@ -14,7 +14,7 @@ dependencies = [
     "uvicorn>=0.23.2,<1.0",
     "aiohttp>=3.8.5,<4.0",
     "python-multipart>=0.0.6,<0.1.0",
-    "psik>=2.0.0,<3.0",
+    "psik>=3.0.0,<4.0",
     "importlib-metadata>=6.8.0,<7.0",
     "certified>=0.10,<2.0",
     "biscuit-python>=0.4.0",
