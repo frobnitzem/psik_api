@@ -1,8 +1,8 @@
 ARG PYTHON_VERSION=3.12
-ARG BASE_OS=bookworm
+ARG BASE_OS=trixie
 
 FROM docker.io/library/python:$PYTHON_VERSION-slim-$BASE_OS
-ARG PSIK_API_VERSION=2.0.1
+ARG PSIK_API_VERSION=3.0.0
 ARG BASE_OS
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,6 +11,7 @@ RUN apt update && apt install -y git rc \
 RUN pip install git+https://github.com/frobnitzem/psik_api@v$PSIK_API_VERSION
 
 # Add a self-signed certificate in case the user didn't configure it.
+# Note: can always mount an /etc/certified dir over-top of this one.
 RUN certified init 'Psik-API Microservice' \
             --host 127.0.0.1 \
             --host ::1 \
