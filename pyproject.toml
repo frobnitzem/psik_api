@@ -53,5 +53,5 @@ build-backend = "setuptools.build_meta"
 include-package-data = false
 
 [tool.setuptools.packages.find]
-include = ["psik_api"]
+include = ["psik_api*"]
 exclude = ["tests", "docs", "examples"]
