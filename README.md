@@ -11,14 +11,11 @@ To setup and run:
 
 1. Install psik\_api (from the site you intend to use):
 
-```
-     module load python/3
-     python3 -m venv
-     VIRTUAL_ENV=/full/path/to/venv
-     PATH=$VIRTUAL_ENV/bin:$PATH
+       python3 -m venv
+       VIRTUAL_ENV=/full/path/to/venv
+       PATH=$VIRTUAL_ENV/bin:$PATH
    
-     pip install git+https://github.com/frobnitzem/psik_api.git
-```
+       pip install git+https://github.com/frobnitzem/psik_api.git
 
 2. Setup a psik\_api config file.  This file is a key-value store
    mapping machine names to psik config files
@@ -27,8 +24,13 @@ To setup and run:
    Note that the `PSIK_CONFIG` environment variable does not
    influence the server running `psik_api`.
 
-   Create a config file at `$PSIK_API_CONFIG` (defaults to
-   `$VIRTUAL_ENV/etc/psik_api.json`) like,
+   The server loads configuration from the first available location in this order:
+   1. A file path provided as an argument to the server
+   2. The path specified in the `$PSIK_API_CONFIG` environment variable
+   3. `$VIRTUAL_ENV/etc/psik_api.json` (if `$VIRTUAL_ENV` is defined)
+   4. `/etc/psik_api.json`
+
+   Example config:
 
        { "backends": {
            "default": {
@@ -66,11 +68,9 @@ To setup and run:
 
    The ssh-tunnel method is simplest,
 
-```
-    ssh frontier -L 127.0.0.1:8000:./psik_api.sock
-    activate /ccs/proj/prj123/frontier
-    uvicorn psik_api.main:app --log-level info --uds $HOME/psik_api.sock
-```
+        ssh frontier -L 127.0.0.1:8000:./psik_api.sock
+        activate /ccs/proj/prj123/frontier
+        uvicorn psik_api.main:app --log-level info --uds $HOME/psik_api.sock
 
     Note that using a UNIX socket in `$HOME` is secure as long as
     only your user can read/write from it.
@@ -97,7 +97,7 @@ To setup and run:
 
 ```
     curl -X POST \
-      http://127.0.0.1:8000/v2/jobs \
+      http://127.0.0.1:8000/v3/jobs \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -112,12 +112,12 @@ To setup and run:
     }'
 
     curl -X GET \
-      'http://127.0.0.1:8000/v2/jobs \
+      'http://127.0.0.1:8000/v3/jobs \
       -H 'accept: application/json'
 
     # replace 1693992878.203 with your job's jobid
     curl -X GET \
-      'http://127.0.0.1:8000/v2/jobs/1693992878.203/logs' \
+      'http://127.0.0.1:8000/v3/jobs/1693992878.203/logs' \
       -H 'accept: application/json'
 ```
 
@@ -128,7 +128,7 @@ To setup and run:
     # full JobSpec must be present at this point,
     # but it will not run until later
     curl -X POST \
-      http://127.0.0.1:8000/v2/jobs/new \
+      http://127.0.0.1:8000/v3/jobs/new \
       -H 'accept: application/json' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -138,13 +138,13 @@ To setup and run:
     # replace 1693992878.203 with your job's jobid below
     # Upload files
     curl -X POST \
-      'http://127.0.0.1:8000/v2/jobs/1693992878.203/files/ \
+      'http://127.0.0.1:8000/v3/jobs/1693992878.203/files/ \
       -H 'accept: application/json' \
       --upload-file data.txt
 
     # start the job
     curl -X POST \
-      'http://127.0.0.1:8000/v2/jobs/1693992878.203/start' \
+      'http://127.0.0.1:8000/v3/jobs/1693992878.203/start' \
       -H 'accept: application/json'
 ```
 

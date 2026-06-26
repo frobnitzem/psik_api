@@ -1534,24 +1534,24 @@ wheels = [
 
 [[package]]
 name = "psik"
-version = "2.1.0"
+version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "anyio" },
     { name = "importlib-metadata" },
     { name = "pydantic" },
-    { name = "pystache" },
+    { name = "pyyaml" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1a/5d/1663eaccc508e740ce2e33cec74344dc7d920cdc25590e3af3503358f506/psik-2.1.0.tar.gz", hash = "sha256:8340b2b5527c6868aaf89fbd3471003c12598322f67703cff1c74163913e63b8", size = 29299, upload-time = "2025-10-08T17:07:58.49Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/47/2a6dcbfda8193821b6fb9d4666794cf7697e686d7e533c86fc66e61ce05c/psik-3.0.0.tar.gz", hash = "sha256:64d93df9fcfeed5f7c87ae3815a12163c2badff3bea289a5f4fb775656780b13", size = 36942, upload-time = "2025-11-06T21:56:47.752Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/02/1dbbea3be78b057292e88f41af7034faabb049bc7fec5ae3e2e6b6478ab0/psik-2.1.0-py3-none-any.whl", hash = "sha256:d0b688bc0d272f1a2ec1b120af7b8e37acdbfbd08f97d236af0958eebd5b71cb", size = 39480, upload-time = "2025-10-08T17:07:57.566Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/62/f58d5fea1eef6a0f1ba09bfb4942bed313f0ca27833caf19d59093811efd/psik-3.0.0-py3-none-any.whl", hash = "sha256:74f7a260dbb8748e7366de869f0bb4a4435dad9337304acfc3cdcd1f464bd453", size = 33389, upload-time = "2025-11-06T21:56:45.815Z" },
 ]
 
 [[package]]
 name = "psik-api"
-version = "2.1.0"
+version = "3.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
@@ -1581,7 +1581,7 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.24.1,<1.0" },
     { name = "importlib-metadata", specifier = ">=6.8.0,<7.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.5.1" },
-    { name = "psik", specifier = ">=2.0.0,<3.0" },
+    { name = "psik", specifier = ">=3.0.0,<4.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0,<8.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<5.0" },
     { name = "python-multipart", specifier = ">=0.0.6,<0.1.0" },
@@ -1747,18 +1747,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
-]
-
-[[package]]
-name = "pystache"
-version = "0.6.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "importlib-metadata", marker = "python_full_version < '3.10'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/85/89/0a712ca22930b8c71bced8703e5bb45669c31690ea81afe15f6cb284550c/pystache-0.6.8.tar.gz", hash = "sha256:3707518e6a4d26dd189b07c10c669b1fc17df72684617c327bd3550e7075c72c", size = 101892, upload-time = "2025-03-18T11:54:47.595Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/78/ffd13a516219129cef6a754a11ba2a1c0d69f1e281af4f6bca9ed5327219/pystache-0.6.8-py3-none-any.whl", hash = "sha256:7211e000974a6e06bce2d4d5cad8df03bcfffefd367209117376e4527a1c3cb8", size = 82051, upload-time = "2025-03-18T11:54:45.813Z" },
 ]
 
 [[package]]

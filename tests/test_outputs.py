@@ -39,15 +39,6 @@ def test_post_job(client) -> None:
         assert isinstance(v, str)
     assert "OK" in resp["stdout.1"]
 
-    for route in ["scripts/", "scripts"]:
-        response = client.get(f"/jobs/{jobid}/{route}")
-        assert response.status_code == 200
-        resp = response.json()
-        assert isinstance(resp, dict)
-        for k, v in resp.items():
-            assert isinstance(k, str)
-            assert isinstance(v, str)
-
     for route in ["files/", "files"]:
         response = client.get(f"/jobs/{jobid}/{route}")
         assert response.status_code == 200
