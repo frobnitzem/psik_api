@@ -13,14 +13,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.9", "3.10", "3.11"]
+        os: ["ubuntu-latest"]
+        python-version: ["3.9", "3.11", "3.13"]
 
     steps:
     - uses: ConorMacBride/install-package@v1
       with:
-        brew: rc
-        apt: rc at
+        apt: at
         #choco: no rc on choco
 
     - uses: actions/checkout@v3
