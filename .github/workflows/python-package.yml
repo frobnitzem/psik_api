@@ -13,14 +13,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest"]
-        python-version: ["3.9", "3.11", "3.13"]
+        os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.10", "3.13"]
 
     steps:
     - uses: ConorMacBride/install-package@v1
       with:
+        #brew: []
         apt: at
-        #choco: no rc on choco
+        #choco: []
 
     - uses: actions/checkout@v3
 
@@ -44,7 +45,7 @@ jobs:
         pytest --cov psik_api tests/
 
     - name: Upload coverage to Codecov
-      if: matrix.python-version == 3.11 && startsWith(matrix.os, 'ubuntu')
+      if: matrix.python-version == 3.13 && startsWith(matrix.os, 'ubuntu')
       uses: codecov/codecov-action@v3
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
